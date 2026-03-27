@@ -141,7 +141,7 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
 
 <div id="setup">
   <div class="logo">FantaGazzetta</div>
-  <div class="sub">Premier Baistaiddi Edition</div>
+  <div class="sub">FantaGazzetta Generator · v8.5</div>
 
   <!-- STATO: attesa dati -->
   <div id="stateWaiting">
@@ -198,6 +198,7 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
       <span style="font-size:12px;color:#555">In attesa dei dati da fantacalcio.it...</span><br>
       <span style="font-size:10px;color:#444;margin-top:4px;display:block">oppure</span>
       <button class="bt bran" onclick="loadDemo()" style="margin-top:8px;font-size:11px;padding:6px 16px">🎲 Carica dati demo</button>
+      <div id="debugBox" style="margin-top:12px;font-family:monospace;font-size:10px;color:#666;text-align:left;background:#0a0a0a;padding:8px;border-radius:4px;display:none"></div>
     </div>
   </div>
 
@@ -303,8 +304,14 @@ function buildBookmarklet(){
         'var ca=exCa(window.matches,giornata);'+
         'var legaNome=(document.querySelector(".dropdown-label")||{}).textContent||slug;'+
         'var payload={slug:slug,legaNome:legaNome.trim(),giornata:giornata,formazioni:fm,calendario:ca,classifica:cl};'+
-        'try{localStorage.setItem("fgdata",JSON.stringify(payload));}catch(e){alert("Errore storage: "+e.message);return;}'+
-        'window.location.href="'+url+'";'+
+        'var slim={s:slug,l:legaNome.trim(),g:giornata,'+
+        'f:fm.map(function(t){return{n:t.nm,m:t.md,tot:t.tot,'+
+        'st:t.st.map(function(p){return[p.r,p.nm,p.fv];}),'+
+        'bn:t.bn.map(function(p){return[p.r,p.nm,p.fv];})};})'+
+        ',c:ca.map(function(m){return[m.ho,m.hp,m.ap,m.aw];}),'+
+        'cl:cl.map(function(t){return[t.nm,t.g,t.v,t.n,t.pr,t.gf,t.gs2,t.pts,t.pt];})};'+
+        'var enc=btoa(unescape(encodeURIComponent(JSON.stringify(slim))));'+
+        'window.location.href="'+url+'?d="+enc;'+
       '})'+
       '.catch(function(e){alert("Errore fetch classifica: "+e.message);});'+
   '})();';
@@ -316,32 +323,47 @@ document.getElementById('bookmarkletLink').href=buildBookmarklet();
 // ─── RICEZIONE DATI DA BOOKMARKLET ────────────────────────────────────────
 
 // ─── RICEVI DATI ───────────────────────────────────────────────────────────
+function dbg(msg){
+  var b=document.getElementById('debugBox');
+  if(!b)return;
+  b.style.display='block';
+  b.innerHTML+=msg+'<br>';
+}
 function loadFromURL(){
-  // Prova prima localStorage (dal bookmarklet)
-  var raw=null;
-  try{raw=localStorage.getItem('fgdata');}catch(e){}
-  // Fallback: URL param (legacy)
-  if(!raw){
-    var params=new URLSearchParams(window.location.search);
-    var data=params.get('data');
-    if(data){try{raw=JSON.stringify(JSON.parse(decodeURIComponent(escape(atob(data)))));}catch(e){}}
-  }
-  if(!raw)return false;
+  dbg('v8.5 · checking URL...');
+  var params=new URLSearchParams(window.location.search);
+  var data=params.get('d');
+  if(!data){dbg('Nessun dato in URL');return false;}
+  dbg('URL param: '+data.length+' chars');
   try{
-    var payload=JSON.parse(raw);
-    D.classifica=payload.classifica||[];
-    D.calendario=payload.calendario||[];
-    D.formazioni=payload.formazioni||[];
-    D.legaNome=payload.legaNome||payload.slug||'Lega';
-    D.giornata=payload.giornata||0;
-    // Pulisci localStorage dopo lettura
-    try{localStorage.removeItem('fgdata');}catch(e){}
+    var slim=JSON.parse(decodeURIComponent(escape(atob(data))));
+    dbg('Parsed OK');
+    // Expand slim format
+    D.legaNome=slim.l||slim.s||'Lega';
+    D.giornata=slim.g||0;
+    // Classifica: [nm,g,v,n,pr,gf,gs2,pts,pt]
+    D.classifica=(slim.cl||[]).map(function(t,i){
+      return{p:i+1,nm:t[0],g:t[1],v:t[2],n:t[3],pr:t[4],gf:t[5],gs2:t[6],dr:t[5]-t[6],pts:t[7],pt:t[8]};
+    });
+    // Formazioni: {n,m,tot,st:[[r,nm,fv]],bn:[[r,nm,fv]]}
+    D.formazioni=(slim.f||[]).map(function(t){
+      return{
+        nm:t.n,md:t.m,tot:t.tot,
+        st:(t.st||[]).map(function(p){return{r:p[0],nm:p[1],v:p[2],fv:p[2]};}),
+        bn:(t.bn||[]).map(function(p){return{r:p[0],nm:p[1],v:p[2],fv:p[2]};})
+      };
+    });
+    // Calendario: [ho,hp,ap,aw]
+    D.calendario=(slim.c||[]).map(function(m){
+      return{g:slim.g,ho:m[0],hp:m[1],ap:m[2],aw:m[3],rs:m[1]+'-'+m[2],hg:m[1],ag:m[2]};
+    });
+    dbg('OK: '+D.classifica.length+' sq · '+D.formazioni.length+' fm · '+D.calendario.length+' ca');
     document.getElementById('stateWaiting').style.display='none';
     document.getElementById('stateReady').style.display='block';
     document.getElementById('readyTitle').textContent=D.legaNome;
     document.getElementById('readyInfo').textContent='Giornata '+D.giornata+' · '+D.classifica.length+' squadre · '+D.formazioni.length+' formazioni';
     return true;
-  }catch(e){console.error('Errore dati:',e);return false;}
+  }catch(e){dbg('Errore: '+e.message);return false;}
 }
 function loadDemo(){
   var nomi=['I megghiu','Poggisbronzi','AS Matici','Inchiummators','AC Picchia','cuoreneroazzurro','Paris Saint GinLemon','Fc Inter'];
