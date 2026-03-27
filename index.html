@@ -141,7 +141,7 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
 
 <div id="setup">
   <div class="logo">FantaGazzetta</div>
-  <div class="sub">FantaGazzetta Generator · v8.5</div>
+  <div class="sub">FantaGazzetta Generator · v8.6</div>
 
   <!-- STATO: attesa dati -->
   <div id="stateWaiting">
@@ -233,7 +233,7 @@ var D={};var RR=function(a){return a[Math.floor(Math.random()*a.length)]};
 document.querySelectorAll('.ck2').forEach(function(e){e.onclick=function(){this.classList.toggle('on')}});
 
 // ─── BOOKMARKLET ───────────────────────────────────────────────────────────
-var FANTAGAZZETTA_URL=window.location.href.split('?')[0];
+var FANTAGAZZETTA_URL=(window.location.hostname==='localhost'||window.location.protocol==='about:'?'https://subrikk.github.io/fantagazzetta/':window.location.href.split('?')[0].split('#')[0]);
 function buildBookmarklet(){
   var url=FANTAGAZZETTA_URL;
   var code='(function(){'+
@@ -287,7 +287,7 @@ function buildBookmarklet(){
       'rows.forEach(function(tr){'+
         'var cells=Array.from(tr.querySelectorAll("td")).map(function(c){return c.textContent.trim();});'+
         'if(cells.length<10)return;'+
-        'var nm=cells[2].replace(/^\\d+/,"").trim();if(!nm||nm.length<2)return;'+
+        'var nm=cells[2].replace(/^\\d+/,"").replace(/\\d+$/,"").trim();if(!nm||nm.length<2)return;'+
         'var g=parseInt(cells[3])||0;if(g<1)return;'+
         'var v=parseInt(cells[4])||0,n=parseInt(cells[5])||0,pr=parseInt(cells[6])||0;'+
         'var gf=parseInt(cells[7])||0,gs=parseInt(cells[8])||0;'+
@@ -330,7 +330,7 @@ function dbg(msg){
   b.innerHTML+=msg+'<br>';
 }
 function loadFromURL(){
-  dbg('v8.5 · checking URL...');
+  dbg('v8.6 · checking URL...');
   var params=new URLSearchParams(window.location.search);
   var data=params.get('d');
   if(!data){dbg('Nessun dato in URL');return false;}
