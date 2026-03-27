@@ -286,7 +286,7 @@ function buildBookmarklet(){
       'rows.forEach(function(tr){'+
         'var cells=Array.from(tr.querySelectorAll("td")).map(function(c){return c.textContent.trim();});'+
         'if(cells.length<10)return;'+
-        'var nm=cells[2];if(!nm||nm.length<2)return;'+
+        'var nm=cells[2].replace(/^\\d+/,"").trim();if(!nm||nm.length<2)return;'+
         'var g=parseInt(cells[3])||0;if(g<1)return;'+
         'var v=parseInt(cells[4])||0,n=parseInt(cells[5])||0,pr=parseInt(cells[6])||0;'+
         'var gf=parseInt(cells[7])||0,gs=parseInt(cells[8])||0;'+
@@ -303,8 +303,8 @@ function buildBookmarklet(){
         'var ca=exCa(window.matches,giornata);'+
         'var legaNome=(document.querySelector(".dropdown-label")||{}).textContent||slug;'+
         'var payload={slug:slug,legaNome:legaNome.trim(),giornata:giornata,formazioni:fm,calendario:ca,classifica:cl};'+
-        'var enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));'+
-        'window.location.href="'+url+'?data="+enc;'+  // redirect invece di popup!
+        'try{localStorage.setItem("fgdata",JSON.stringify(payload));}catch(e){alert("Errore storage: "+e.message);return;}'+
+        'window.location.href="'+url+'";'+
       '})'+
       '.catch(function(e){alert("Errore fetch classifica: "+e.message);});'+
   '})();';
@@ -317,16 +317,25 @@ document.getElementById('bookmarkletLink').href=buildBookmarklet();
 
 // ─── RICEVI DATI ───────────────────────────────────────────────────────────
 function loadFromURL(){
-  var params=new URLSearchParams(window.location.search);
-  var data=params.get('data');
-  if(!data)return false;
+  // Prova prima localStorage (dal bookmarklet)
+  var raw=null;
+  try{raw=localStorage.getItem('fgdata');}catch(e){}
+  // Fallback: URL param (legacy)
+  if(!raw){
+    var params=new URLSearchParams(window.location.search);
+    var data=params.get('data');
+    if(data){try{raw=JSON.stringify(JSON.parse(decodeURIComponent(escape(atob(data)))));}catch(e){}}
+  }
+  if(!raw)return false;
   try{
-    var payload=JSON.parse(decodeURIComponent(escape(atob(data))));
+    var payload=JSON.parse(raw);
     D.classifica=payload.classifica||[];
     D.calendario=payload.calendario||[];
     D.formazioni=payload.formazioni||[];
     D.legaNome=payload.legaNome||payload.slug||'Lega';
     D.giornata=payload.giornata||0;
+    // Pulisci localStorage dopo lettura
+    try{localStorage.removeItem('fgdata');}catch(e){}
     document.getElementById('stateWaiting').style.display='none';
     document.getElementById('stateReady').style.display='block';
     document.getElementById('readyTitle').textContent=D.legaNome;
