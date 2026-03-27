@@ -141,7 +141,7 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
 
 <div id="setup">
   <div class="logo">FantaGazzetta</div>
-  <div class="sub">FantaGazzetta Generator · v8.6</div>
+  <div class="sub">FantaGazzetta Generator · v8.7</div>
 
   <!-- STATO: attesa dati -->
   <div id="stateWaiting">
@@ -160,14 +160,14 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
           <span style="font-size:22px;flex-shrink:0">2️⃣</span>
           <div>
             <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#E8956A;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Vai su fantacalcio</div>
-            <div style="font-size:11px;color:#999;line-height:1.5">Loggati su leghe.fantacalcio.it e vai su <strong style="color:#ccc">Formazioni → seleziona l'ultima giornata giocata</strong> (es. <code style="color:#E8956A">/formazioni/28</code>). Aspetta che i risultati siano visibili.</div>
+            <div style="font-size:11px;color:#999;line-height:1.5">Loggati su leghe.fantacalcio.it e vai sulla pagina <strong style="color:#ccc">Formazioni</strong> della tua lega — qualsiasi giornata va bene.</div>
           </div>
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:#1a1a1a;border-radius:8px;border-left:3px solid var(--verde)">
           <span style="font-size:22px;flex-shrink:0">3️⃣</span>
           <div>
             <div style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--verde);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Clicca il preferito</div>
-            <div style="font-size:11px;color:#999;line-height:1.5">Clicca "⚽ FantaGazzetta" nella barra dei preferiti. La pagina si ricarica sulla FantaGazzetta con tutti i dati già pronti.</div>
+            <div style="font-size:11px;color:#999;line-height:1.5">Clicca "⚽ FantaGazzetta" nella barra dei preferiti. Se sei sulla giornata sbagliata ti porta automaticamente su quella giusta con un messaggio arancione. Poi clicca di nuovo.</div>
           </div>
         </div>
       </div>
@@ -237,85 +237,40 @@ var FANTAGAZZETTA_URL=(window.location.hostname==='localhost'||window.location.p
 function buildBookmarklet(){
   var url=FANTAGAZZETTA_URL;
   var code='(function(){'+
-    // Verifica che siamo su fantacalcio
-    'if(window.location.hostname.indexOf("fantacalcio")<0){alert("Vai su leghe.fantacalcio.it → Formazioni!");return;}'+
-    // Leggi slug dall'URL
+    'if(window.location.hostname.indexOf("fantacalcio")<0){alert("Vai su leghe.fantacalcio.it Formazioni!");return;}'+
     'var slug=window.location.pathname.split("/")[1];'+
-    // Leggi giornata dal path (es /formazioni/28 → 28) oppure dal select
-    'var pathG=parseInt((window.location.pathname.match(/formazioni\\/(\d+)/)||[])[1]);'+
+    'var pathG=parseInt((window.location.pathname.match(/formazioni\\/(\\d+)/)||[])[1]);'+
     'var selG=parseInt((document.querySelector("select.selectpicker")||{}).value);'+
-    // Se siamo su /formazioni senza numero, il select mostra la prossima → prendiamo selG
-    // Se siamo su /formazioni/28, pathG=28
-    'var giornata=pathG||selG;'+
-    'if(!giornata||isNaN(giornata)){alert("Non riesco a leggere la giornata. Vai su /formazioni");return;}'+
-    // Verifica matches calcolati sulla pagina corrente
     'var calcolati=(window.matches||[]).filter(function(m){return m.calculated;});'+
+    // Se non ci sono dati calcolati → redirect sulla giornata giocata con banner
     'if(calcolati.length===0){'+
-      // Non ci sono dati calcolati → siamo sulla pagina sbagliata
-      'var giocata=pathG||(selG);'+
-      'alert("Nessun dato disponibile. Vai su:\\nleghe.fantacalcio.it/"+slug+"/formazioni/"+giocata);'+
+      'var giocata=pathG||(isNaN(selG)?0:selG);'+
+      'if(!giocata){alert("Non riesco a leggere la giornata. Vai su /formazioni");return;}'+
+      'var b=document.createElement("div");'+
+      'b.style.cssText="position:fixed;top:0;left:0;right:0;background:#E8956A;color:#fff;font-family:sans-serif;font-size:15px;font-weight:bold;text-align:center;padding:14px;z-index:99999;box-shadow:0 3px 10px rgba(0,0,0,.4)";'+
+      'b.innerHTML="⚽ FantaGazzetta: carico la giornata "+giocata+"... clicca di nuovo tra qualche secondo!";'+
+      'document.body.appendChild(b);'+
+      'setTimeout(function(){window.location.href=window.location.origin+"/"+slug+"/formazioni/"+giocata+"?fg=1";},1500);'+
       'return;'+
     '}'+
-    // Estrai formazioni
-    'function exFm(matches){'+
-      'var fm=[];'+
-      '(matches||[]).forEach(function(m){'+
-        'if(!m.teams||m.teams.length<2||!m.calculated)return;'+
-        'm.teams.forEach(function(t){'+
-          'var st=[],bn=[];'+
-          '(t.players||[]).forEach(function(p){'+
-            'st.push({r:p.role||"c",nm:p.name||"",v:parseFloat(p.vote)||0,fv:parseFloat(p.fantagrade)||0});'+
-          '});'+
-          '(t.reserves||[]).forEach(function(p){'+
-            'bn.push({r:p.role||"c",nm:p.name||"",v:parseFloat(p.vote)||0,fv:parseFloat(p.fantagrade)||0});'+
-          '});'+
-          'fm.push({nm:t.name||"",st:st,bn:bn,md:(t.schemes&&t.schemes[0])||"4-3-3",tot:parseFloat(t.score)||0});'+
-        '});'+
-      '});return fm;}'+
-    // Estrai calendario
-    'function exCa(matches,g){'+
-      'var ca=[];'+
-      '(matches||[]).forEach(function(m){'+
-        'if(!m.teams||m.teams.length<2||!m.calculated)return;'+
-        'var hp=parseFloat(m.teams[0].score)||0,ap=parseFloat(m.teams[1].score)||0;'+
-        'ca.push({g:g,ho:m.teams[0].name,hp:hp,ap:ap,aw:m.teams[1].name,rs:hp+"-"+ap,hg:hp,ag:ap});'+
-      '});return ca;}'+
-    // Estrai classifica dalla home via fetch (funziona senza login)
-    'function exCl(html){'+
-      'var p=new DOMParser(),doc=p.parseFromString(html,"text/html");'+
-      'var rows=doc.querySelectorAll("table.smart-table tr"),cl=[];'+
-      'rows.forEach(function(tr){'+
-        'var cells=Array.from(tr.querySelectorAll("td")).map(function(c){return c.textContent.trim();});'+
-        'if(cells.length<10)return;'+
-        'var nm=cells[2].replace(/^\\d+/,"").replace(/\\d+$/,"").trim();if(!nm||nm.length<2)return;'+
-        'var g=parseInt(cells[3])||0;if(g<1)return;'+
-        'var v=parseInt(cells[4])||0,n=parseInt(cells[5])||0,pr=parseInt(cells[6])||0;'+
-        'var gf=parseInt(cells[7])||0,gs=parseInt(cells[8])||0;'+
-        'var pts=parseFloat((cells[10]||"0").replace(",","."))||0;'+
-        'cl.push({p:cl.length+1,nm:nm,g:g,v:v,n:n,pr:pr,gf:gf,gs2:gs,dr:gf-gs,pts:pts,pt:parseInt(cells[9])||0});'+
-      '});return cl;}'+
-    // Fetch classifica e invia tutto
+    'var giornata=pathG||selG;'+
+    'if(!giornata){alert("Giornata non trovata.");return;}'+
+    'var b2=document.createElement("div");'+
+    'b2.style.cssText="position:fixed;top:0;left:0;right:0;background:#27ae60;color:#fff;font-family:sans-serif;font-size:15px;font-weight:bold;text-align:center;padding:14px;z-index:99999;box-shadow:0 3px 10px rgba(0,0,0,.4)";'+
+    'b2.innerHTML="⚽ FantaGazzetta: estraggo i dati della giornata "+giornata+"...";'+
+    'document.body.appendChild(b2);'+
+    'function exFm(matches){var fm=[];(matches||[]).forEach(function(m){if(!m.teams||m.teams.length<2||!m.calculated)return;m.teams.forEach(function(t){var st=[],bn=[];(t.players||[]).forEach(function(p){st.push([p.role||"c",p.name||"",parseFloat(p.fantagrade)||0]);});(t.reserves||[]).forEach(function(p){bn.push([p.role||"c",p.name||"",parseFloat(p.fantagrade)||0]);});fm.push({n:t.name||"",m:(t.schemes&&t.schemes[0])||"4-3-3",tot:parseFloat(t.score)||0,st:st,bn:bn});});});return fm;}'+
+    'function exCa(matches,g){var ca=[];(matches||[]).forEach(function(m){if(!m.teams||m.teams.length<2||!m.calculated)return;var hp=parseFloat(m.teams[0].score)||0,ap=parseFloat(m.teams[1].score)||0;ca.push([m.teams[0].name,hp,ap,m.teams[1].name]);});return ca;}'+
+    'function exCl(html){var p=new DOMParser(),doc=p.parseFromString(html,"text/html"),rows=doc.querySelectorAll("table.smart-table tr"),cl=[];rows.forEach(function(tr){var cells=Array.from(tr.querySelectorAll("td")).map(function(c){return c.textContent.trim();});if(cells.length<10)return;var nm=cells[2].replace(/^\\d+/,"").replace(/\\d+$/,"").trim();if(!nm||nm.length<2)return;var g=parseInt(cells[3])||0;if(g<1)return;cl.push([nm,g,parseInt(cells[4])||0,parseInt(cells[5])||0,parseInt(cells[6])||0,parseInt(cells[7])||0,parseInt(cells[8])||0,parseFloat((cells[10]||"0").replace(",","."))||0,parseInt(cells[9])||0]);});return cl;}'+
     'var base=window.location.origin+"/"+slug;'+
-    'fetch(base+"/",{credentials:"include"})'+
-      '.then(function(r){return r.text();})'+
-      '.then(function(html){'+
-        'var cl=exCl(html);'+
-        'var fm=exFm(window.matches);'+
-        'var ca=exCa(window.matches,giornata);'+
-        'var legaNome=(document.querySelector(".dropdown-label")||{}).textContent||slug;'+
-        'var payload={slug:slug,legaNome:legaNome.trim(),giornata:giornata,formazioni:fm,calendario:ca,classifica:cl};'+
-        'var slim={s:slug,l:legaNome.trim(),g:giornata,'+
-        'f:fm.map(function(t){return{n:t.nm,m:t.md,tot:t.tot,'+
-        'st:t.st.map(function(p){return[p.r,p.nm,p.fv];}),'+
-        'bn:t.bn.map(function(p){return[p.r,p.nm,p.fv];})};})'+
-        ',c:ca.map(function(m){return[m.ho,m.hp,m.ap,m.aw];}),'+
-        'cl:cl.map(function(t){return[t.nm,t.g,t.v,t.n,t.pr,t.gf,t.gs2,t.pts,t.pt];})};'+
-        'var enc=btoa(unescape(encodeURIComponent(JSON.stringify(slim))));'+
-        'window.location.href="'+url+'?d="+enc;'+
-      '})'+
-      '.catch(function(e){alert("Errore fetch classifica: "+e.message);});'+
-  '})();';
-  return 'javascript:'+encodeURIComponent(code);
+    'fetch(base+"/",{credentials:"include"}).then(function(r){return r.text();}).then(function(html){'+
+      'var cl=exCl(html),fm=exFm(window.matches),ca=exCa(window.matches,giornata);'+
+      'var legaNome=(document.querySelector(".dropdown-label")||{}).textContent||slug;'+
+      'var slim={s:slug,l:legaNome.trim(),g:giornata,f:fm,c:ca,cl:cl};'+
+      'var enc=btoa(unescape(encodeURIComponent(JSON.stringify(slim))));'+
+      'window.location.href="'+url+'?d="+enc;'+
+    '}).catch(function(e){alert("Errore: "+e.message);});'+
+  '})();';  return 'javascript:'+encodeURIComponent(code);
 }
 document.getElementById('bookmarkletLink').href=buildBookmarklet();
 
@@ -330,7 +285,7 @@ function dbg(msg){
   b.innerHTML+=msg+'<br>';
 }
 function loadFromURL(){
-  dbg('v8.6 · checking URL...');
+  dbg('v8.7 · checking URL...');
   var params=new URLSearchParams(window.location.search);
   var data=params.get('d');
   if(!data){dbg('Nessun dato in URL');return false;}
