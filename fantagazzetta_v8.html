@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantaGazzetta</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Merriweather:wght@400;700;900&family=Roboto+Condensed:wght@400;700&family=Anton&family=Playfair+Display:wght@700;900&display=swap');
+:root{--rosa:#FDE8D0;--ar:#E8956A;--ard:#D96B3A;--rosso:#C0392B;--verde:#27ae60;--nero:#1a1a1a;--gr:#555}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height:100vh}
+
+/* SETUP */
+#setup{max-width:800px;margin:0 auto;padding:40px 20px}
+.logo{font-family:'Anton',sans-serif;font-size:48px;color:var(--ar);text-transform:uppercase;letter-spacing:4px;text-align:center;margin-bottom:6px;text-shadow:2px 2px 0 rgba(0,0,0,.5)}
+.sub{font-family:'Oswald',sans-serif;font-size:14px;color:#888;text-transform:uppercase;letter-spacing:6px;text-align:center;margin-bottom:32px}
+.ugrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.uc{background:#2a2a2a;border:2px dashed #444;border-radius:10px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .3s;position:relative}
+.uc:hover{border-color:var(--ar);background:#333}
+.uc.ok{border-color:var(--verde);border-style:solid;background:rgba(39,174,96,.08)}
+.uc.err{border-color:var(--rosso);border-style:solid;background:rgba(192,57,43,.08)}
+.uc .ico{font-size:32px;margin-bottom:8px}
+.uc .lb{font-family:'Oswald',sans-serif;font-size:14px;color:#ccc;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.uc .fn{font-size:10px;color:var(--verde);margin-top:6px;word-break:break-all}
+.uc input{display:none}
+.uc .ck{position:absolute;top:8px;right:10px;font-size:18px;display:none}
+.uc.ok .ck{display:block}
+
+/* CONFIG */
+#config{display:none;background:#222;border-radius:10px;padding:20px;border:1px solid #333;margin-bottom:24px;margin-top:16px}
+#config.vis{display:block}
+.cpt{font-family:'Oswald',sans-serif;font-size:16px;color:var(--ar);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;text-align:center}
+.cps{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.ck2{display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;background:#2a2a2a;border-radius:6px;border:1px solid #333;transition:all .2s;user-select:none}
+.ck2:hover{border-color:var(--ar)}
+.ck2.on{border-color:var(--verde);background:rgba(39,174,96,.06)}
+.ck2 .bx{width:18px;height:18px;border:2px solid #555;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;flex-shrink:0}
+.ck2.on .bx{border-color:var(--verde);color:var(--verde);background:rgba(39,174,96,.1)}
+.ck2 span{font-size:12px;color:#ccc}
+.btns{display:flex;gap:10px;justify-content:center}
+.bt{font-family:'Oswald',sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:2px;padding:10px 24px;border-radius:6px;cursor:pointer;border:none;color:#fff;transition:all .2s}
+.bt:hover{transform:scale(1.03)}
+.bran{background:linear-gradient(135deg,#8E44AD,#6C3483)}
+.bgen{background:linear-gradient(135deg,var(--ar),var(--ard))}
+
+/* NEWSPAPER - print safe */
+.newspaper,.newspaper *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+.newspaper{width:820px;background:var(--rosa);box-shadow:0 0 40px rgba(0,0,0,.5);position:relative;overflow:hidden;margin:0 auto}
+.newspaper::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.012) 2px,rgba(0,0,0,.012) 4px);pointer-events:none;z-index:1}
+.hdr{background-color:#E07A4F!important;padding:10px 24px 8px;text-align:center;border-bottom:5px solid var(--nero)}
+.hdt{display:flex;justify-content:space-between;font-size:10px;color:#fff;text-transform:uppercase;letter-spacing:1.5px;opacity:.85;margin-bottom:4px}
+.mhd{font-family:'Anton',sans-serif;font-size:60px;color:#fff;text-transform:uppercase;letter-spacing:5px;line-height:1;text-shadow:3px 3px 0 rgba(0,0,0,.25)}
+.msd{font-family:'Oswald',sans-serif;font-weight:500;font-size:14px;color:#fff;text-transform:uppercase;letter-spacing:10px;margin-top:2px;opacity:.8}
+.edb{background-color:var(--nero)!important;color:var(--rosa);font-size:11px;text-transform:uppercase;letter-spacing:2px;padding:5px 24px;display:flex;justify-content:space-between}
+.hl{padding:16px 24px 12px;text-align:center;border-bottom:3px double var(--nero)}
+.hl h1{font-family:'Playfair Display',serif;font-weight:900;font-size:36px;color:var(--nero);line-height:1.05;margin-bottom:6px}
+.hl h1 .ac{color:var(--rosso)}
+.hl p{font-size:14px;color:var(--gr);font-style:italic}
+.st{font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:2px;color:#fff!important;background-color:var(--nero)!important;padding:5px 24px}
+.st .ac{color:var(--ar)}
+.pdv{background-color:#E07A4F!important;color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:4px;text-align:center;padding:7px}
+.mg{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--nero)}
+.ma{padding:9px 14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;border-bottom:1px solid rgba(0,0,0,.08)}
+.mg .ma:nth-child(odd){border-right:1px solid rgba(0,0,0,.12)}
+.mt{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--nero)}.mt.h{text-align:right}.mt.a{text-align:left}
+.msb{text-align:center;min-width:65px}
+.mr{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:var(--rosso);line-height:1}
+.mp2{font-size:9px;color:#999;margin-top:1px}
+.mvps{padding:12px 24px;border-bottom:2px solid var(--nero);display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mvpc{text-align:center;padding:10px;border-radius:4px}
+.mvpc.g{background-color:rgba(39,174,96,.08)!important;border:2px solid var(--verde)}
+.mvpc.r{background-color:rgba(192,57,43,.08)!important;border:2px solid var(--rosso)}
+.mvpb{font-family:'Oswald',sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
+.mvpc.g .mvpb{color:var(--verde)}.mvpc.r .mvpb{color:var(--rosso)}
+.mvpn{font-family:'Playfair Display',serif;font-weight:900;font-size:18px;color:var(--nero);margin-bottom:2px}
+.mvpv{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700}
+.mvpc.g .mvpv{color:var(--verde)}.mvpc.r .mvpv{color:var(--rosso)}
+.mvpd{font-size:10px;color:#888;margin-top:2px}
+.art{padding:14px 24px 12px;border-bottom:3px double var(--nero)}
+.art.tc{column-count:2;column-gap:22px;column-rule:1px solid rgba(0,0,0,.1)}
+.art p{font-family:'Merriweather',serif;font-size:12px;line-height:1.7;color:#222;margin-bottom:9px;text-align:justify;hyphens:auto}
+.art.dc p:first-of-type::first-letter{font-family:'Anton',sans-serif;font-size:44px;float:left;line-height:.8;margin-right:4px;margin-top:3px;color:var(--rosso)}
+.ahl{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:#E07A4F;text-align:center;padding:10px 12px;margin:12px 0;border-top:2px solid #E07A4F;border-bottom:2px solid #E07A4F;line-height:1.3;text-transform:uppercase;letter-spacing:.5px;column-span:all}
+.bn{font-weight:900;color:var(--nero)}.si{font-family:'Oswald',sans-serif;font-weight:700;color:var(--rosso);font-size:12px}
+.abl{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(0,0,0,.08)}
+.ct{width:100%;border-collapse:collapse}
+.ct thead th{background-color:#2c2c2c!important;color:var(--rosa)!important;font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:5px 6px;font-weight:700;text-align:center}
+.ct thead th:nth-child(2){text-align:left}
+.ct tbody td{padding:6px;font-size:11px;text-align:center;border-bottom:1px solid rgba(0,0,0,.06);color:var(--nero)}
+.ct tbody td:nth-child(2){text-align:left;font-weight:700;font-size:11px;text-transform:uppercase}
+.ct tbody tr:first-child{background-color:rgba(212,175,55,.12)!important}
+.ct tbody tr:last-child{background-color:rgba(192,57,43,.06)!important}
+.ct tbody tr:last-child td:nth-child(2){color:var(--rosso)}
+.pn{font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;color:#E07A4F}
+.pc{font-family:'Oswald',sans-serif;font-weight:700;font-size:14px}
+.dp{color:var(--verde);font-weight:700}.dnn{color:var(--rosso);font-weight:700}
+.scol{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--nero)}
+.sc{padding:12px 16px}.sc:first-child{border-right:1px solid rgba(0,0,0,.12)}
+.stt{font-family:'Oswald',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--nero);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid #E07A4F}
+.si2{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dotted rgba(0,0,0,.08)}
+.si2:last-child{border-bottom:none}
+.sl{font-size:11px;color:#333;font-weight:700;text-transform:uppercase}
+.sv2{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#E07A4F}
+.sg{color:var(--verde)}.sr{color:var(--rosso)}
+.trs{padding:12px 24px}.trg{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:5px;margin-top:8px}
+.trt{text-align:center;padding:5px 3px;background-color:rgba(0,0,0,.02)!important;border-radius:3px}
+.trn{font-size:8px;font-weight:700;text-transform:uppercase;color:var(--gr);margin-bottom:4px;line-height:1.2;min-height:18px;display:flex;align-items:center;justify-content:center}
+.trr{display:flex;justify-content:center;gap:2px}
+.tdd{width:12px;height:12px;border-radius:2px;font-size:7px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center}
+.tw{background-color:var(--verde)!important}.tpp{background-color:#f39c12!important}.tll{background-color:var(--rosso)!important}
+.tacg{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--nero)}
+.tacc{padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08)}
+.tacg .tacc:nth-child(odd){border-right:1px solid rgba(0,0,0,.1)}
+.tact{font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;color:var(--nero);margin-bottom:2px}
+.tacm{font-size:10px;color:#E07A4F;font-weight:700;margin-bottom:3px}
+.tacd{font-family:'Merriweather',serif;font-size:10px;color:var(--gr);line-height:1.5}
+.tacd strong{color:var(--nero)}
+.intg{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--nero)}
+.intc{padding:12px 18px;border-bottom:1px solid rgba(0,0,0,.06)}
+.intg .intc:nth-child(odd){border-right:1px solid rgba(0,0,0,.1)}
+.inth{display:flex;justify-content:space-between;margin-bottom:5px}
+.intt{font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--nero)}
+.intr{font-size:8px;color:#999;text-transform:uppercase;letter-spacing:1px}
+.intq{font-family:'Merriweather',serif;font-size:11px;color:#333;font-style:italic;line-height:1.5;margin-bottom:3px}
+.inta{font-size:9px;color:#888;text-align:right}
+.qbar{background-color:#E07A4F!important;color:#fff;font-family:'Merriweather',serif;font-style:italic;font-size:11px;padding:7px 24px;text-align:center;border-bottom:2px solid var(--nero)}
+.ftr{background-color:var(--nero)!important;color:var(--rosa);padding:8px 24px;display:flex;justify-content:space-between;font-size:9px;text-transform:uppercase;letter-spacing:1px;opacity:.7}
+
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  body{background:#fff!important;padding:0!important}
+  #setup{display:none!important}
+  .newspaper{width:100%!important;box-shadow:none!important;margin:0!important}
+  .newspaper::before{display:none!important}
+  @page{margin:6mm;size:A4}
+}
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <div class="logo">FantaGazzetta</div>
+  <div class="sub">Premier Baistaiddi Edition</div>
+
+  <!-- STATO: attesa dati -->
+  <div id="stateWaiting">
+    <div style="background:#222;border-radius:12px;padding:28px 24px;border:1px solid #333;margin-bottom:20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">📋</div>
+      <div class="cpt" style="margin-bottom:12px">Come funziona</div>
+      <div style="text-align:left;max-width:480px;margin:0 auto">
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;padding:12px;background:#1a1a1a;border-radius:8px;border-left:3px solid #E8956A">
+          <span style="font-size:22px;flex-shrink:0">1️⃣</span>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#E8956A;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Salva il bookmarklet</div>
+            <div style="font-size:11px;color:#999;line-height:1.5">Trascina il pulsante arancione qui sotto nella barra dei preferiti del browser. Si fa una volta sola.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;padding:12px;background:#1a1a1a;border-radius:8px;border-left:3px solid #E8956A">
+          <span style="font-size:22px;flex-shrink:0">2️⃣</span>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#E8956A;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Vai su fantacalcio</div>
+            <div style="font-size:11px;color:#999;line-height:1.5">Loggati su leghe.fantacalcio.it e vai sulla pagina <strong style="color:#ccc">Formazioni</strong> della tua lega.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:#1a1a1a;border-radius:8px;border-left:3px solid var(--verde)">
+          <span style="font-size:22px;flex-shrink:0">3️⃣</span>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--verde);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Clicca il preferito</div>
+            <div style="font-size:11px;color:#999;line-height:1.5">Clicca "FantaGazzetta" nella barra dei preferiti. I dati vengono caricati e il giornale si genera automaticamente.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKMARKLET DRAG -->
+      <div style="margin-top:24px;padding:16px;background:#111;border-radius:8px;border:2px dashed #444">
+        <div style="font-size:11px;color:#666;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px">Trascina questo nella barra dei preferiti ↓</div>
+        <a id="bookmarkletLink" href="#" style="display:inline-block;background:linear-gradient(135deg,#E8956A,#D96B3A);color:#fff;font-family:'Oswald',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;padding:12px 28px;border-radius:8px;text-decoration:none;box-shadow:0 4px 15px rgba(232,149,106,.4);cursor:grab">
+          ⚽ FantaGazzetta
+        </a>
+        <div style="font-size:10px;color:#555;margin-top:8px">← tieni premuto e trascina nella barra preferiti</div>
+      </div>
+    </div>
+
+    <!-- CONFIG sezioni -->
+    <div style="background:#222;border-radius:10px;padding:16px;border:1px solid #333;margin-bottom:16px">
+      <div class="cpt" style="margin-bottom:12px">Sezioni da includere</div>
+      <div class="cps">
+        <div class="ck2 on" data-k="cronaca"><div class="bx">✓</div><span>Cronaca partite</span></div>
+        <div class="ck2 on" data-k="interviste"><div class="bx">✓</div><span>Interviste post-partita</span></div>
+        <div class="ck2 on" data-k="classifica"><div class="bx">✓</div><span>Classifica e analisi</span></div>
+        <div class="ck2 on" data-k="tattico"><div class="bx">✓</div><span>Focus tattico</span></div>
+        <div class="ck2 on" data-k="statistiche"><div class="bx">✓</div><span>Statistiche stagione</span></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:16px;background:#111;border-radius:8px;border:1px dashed #333">
+      <span style="font-size:12px;color:#555">In attesa dei dati da fantacalcio.it...</span><br>
+      <span style="font-size:10px;color:#444;margin-top:4px;display:block">oppure</span>
+      <button class="bt bran" onclick="loadDemo()" style="margin-top:8px;font-size:11px;padding:6px 16px">🎲 Carica dati demo</button>
+    </div>
+  </div>
+
+  <!-- STATO: dati ricevuti -->
+  <div id="stateReady" style="display:none">
+    <div style="background:rgba(39,174,96,.1);border:2px solid var(--verde);border-radius:10px;padding:20px;text-align:center;margin-bottom:16px">
+      <div style="font-size:36px;margin-bottom:8px">✅</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:18px;color:var(--verde);text-transform:uppercase;letter-spacing:2px" id="readyTitle">Dati caricati!</div>
+      <div style="font-size:11px;color:#888;margin-top:6px" id="readyInfo"></div>
+    </div>
+    <div style="background:#222;border-radius:10px;padding:16px;border:1px solid #333;margin-bottom:16px">
+      <div class="cpt" style="margin-bottom:12px">Sezioni da includere</div>
+      <div class="cps">
+        <div class="ck2 on" data-k="cronaca"><div class="bx">✓</div><span>Cronaca partite</span></div>
+        <div class="ck2 on" data-k="interviste"><div class="bx">✓</div><span>Interviste post-partita</span></div>
+        <div class="ck2 on" data-k="classifica"><div class="bx">✓</div><span>Classifica e analisi</span></div>
+        <div class="ck2 on" data-k="tattico"><div class="bx">✓</div><span>Focus tattico</span></div>
+        <div class="ck2 on" data-k="statistiche"><div class="bx">✓</div><span>Statistiche stagione</span></div>
+      </div>
+      <div class="btns" style="margin-top:8px">
+        <button class="bt bran" onclick="doRandom()">🎲 Random</button>
+        <button class="bt bgen" onclick="doGen()">📰 Genera Gazzetta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="out"></div>
+
+<script>
+var D={};var RR=function(a){return a[Math.floor(Math.random()*a.length)]};
+document.querySelectorAll('.ck2').forEach(function(e){e.onclick=function(){this.classList.toggle('on')}});
+
+// ─── BOOKMARKLET ───────────────────────────────────────────────────────────
+var FANTAGAZZETTA_URL=window.location.href.split('?')[0];
+function buildBookmarklet(){
+  var url=FANTAGAZZETTA_URL;
+  var code='(function(){'+
+    'var sel=document.querySelector("select.selectpicker");'+
+    'if(!sel){alert("Vai sulla pagina Formazioni della tua lega!");return;}'+
+    'var lastG=parseInt(sel.value);'+
+    'if(isNaN(lastG)||lastG<1){alert("Giornata non valida");return;}'+
+    'var slug=window.location.pathname.split("/")[1];'+
+    'var base=window.location.origin+"/"+slug;'+
+    'function exCl(html){'+
+      'var p=new DOMParser(),doc=p.parseFromString(html,"text/html");'+
+      'var rows=doc.querySelectorAll("table.smart-table tr"),cl=[];'+
+      'rows.forEach(function(tr){'+
+        'var cells=Array.from(tr.querySelectorAll("td")).map(function(c){return c.textContent.trim();});'+
+        'if(cells.length<10)return;'+
+        'var nm=cells[2];if(!nm||nm.length<2)return;'+
+        'var g=parseInt(cells[3])||0;if(g<1)return;'+
+        'var v=parseInt(cells[4])||0,n=parseInt(cells[5])||0,pr=parseInt(cells[6])||0;'+
+        'var gf=parseInt(cells[7])||0,gs=parseInt(cells[8])||0;'+
+        'var pts=parseFloat((cells[10]||"0").replace(",","."))||0;'+
+        'var pt=parseInt(cells[9])||0;'+
+        'cl.push({p:cl.length+1,nm:nm,g:g,v:v,n:n,pr:pr,gf:gf,gs2:gs,dr:gf-gs,pts:pts,pt:pt});'+
+      '});return cl;}'+
+    'function exFm(matches){'+
+      'var fm=[];'+
+      '(matches||[]).forEach(function(m){'+
+        'if(!m.teams||m.teams.length<2)return;'+
+        'm.teams.forEach(function(t){'+
+          'var st=[],bn=[];'+
+          '(t.players||[]).forEach(function(p){'+
+            'var o={r:p.role||"c",nm:p.name||"",v:p.vote||0,fv:p.fantagrade||p.grade||0};'+
+            'if(p.reserve)bn.push(o);else st.push(o);'+
+          '});'+
+          '(t.reserves||[]).forEach(function(p){bn.push({r:p.role||"c",nm:p.name||"",v:p.vote||0,fv:p.fantagrade||p.grade||0});});'+
+          'fm.push({nm:t.name||"",st:st,bn:bn,md:(t.schemes&&t.schemes[0])||"4-3-3",tot:parseFloat(t.score)||0});'+
+        '});'+
+      '});return fm;}'+
+    'function exCa(matches,g){'+
+      'var ca=[];'+
+      '(matches||[]).forEach(function(m){'+
+        'if(!m.teams||m.teams.length<2||!m.calculated)return;'+
+        'var hp=parseFloat(m.teams[0].score)||0,ap=parseFloat(m.teams[1].score)||0;'+
+        'ca.push({g:g,ho:m.teams[0].name||"",hp:hp,ap:ap,aw:m.teams[1].name||"",rs:hp+"-"+ap,hg:hp,ag:ap});'+
+      '});return ca;}'+
+    'function send(matches,cl){'+
+      'var fm=exFm(matches),ca=exCa(matches,lastG);'+
+      'var legaNome=document.title||slug;'+
+      'var payload={slug:slug,legaNome:legaNome,giornata:lastG,formazioni:fm,calendario:ca,classifica:cl};'+
+      'var enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));'+
+      'window.open("'+url+'?data="+enc,"_blank");'+
+    '}'+
+    'fetch(base+"/",{credentials:"include"})'+
+      '.then(function(r){return r.text();})'+
+      '.then(function(html){'+
+        'var cl=exCl(html);'+
+        'if(window.matches&&window.matches.length>0&&window.matches[0].calculated){send(window.matches,cl);return;}'+
+        'var w=window.open(base+"/formazioni/"+lastG,"fgpopup","width=100,height=100,left=-2000,top=-2000");'+
+        'var att=0,timer=setInterval(function(){'+
+          'att++;try{'+
+            'if(w.window.matches&&w.window.matches.length>0&&w.window.matches[0].calculated){'+
+              'clearInterval(timer);var md=w.window.matches;w.close();send(md,cl);'+
+            '}'+
+          '}catch(e){}'+
+          'if(att>40){clearInterval(timer);if(w)w.close();alert("Timeout. Riprova dalla pagina formazioni/"+lastG);}'+
+        '},500);'+
+      '})'+
+      '.catch(function(e){alert("Errore: "+e.message);});'+
+  '})();';
+  return 'javascript:'+encodeURIComponent(code);
+}
+document.getElementById('bookmarkletLink').href=buildBookmarklet();
+
+
+// ─── RICEZIONE DATI DA BOOKMARKLET ────────────────────────────────────────
+
+// ─── RICEVI DATI ───────────────────────────────────────────────────────────
+function loadFromURL(){
+  var params=new URLSearchParams(window.location.search);
+  var data=params.get('data');
+  if(!data)return false;
+  try{
+    var payload=JSON.parse(decodeURIComponent(escape(atob(data))));
+    D.classifica=payload.classifica||[];
+    D.calendario=payload.calendario||[];
+    D.formazioni=payload.formazioni||[];
+    D.legaNome=payload.legaNome||payload.slug||'Lega';
+    D.giornata=payload.giornata||0;
+    document.getElementById('stateWaiting').style.display='none';
+    document.getElementById('stateReady').style.display='block';
+    document.getElementById('readyTitle').textContent=D.legaNome;
+    document.getElementById('readyInfo').textContent='Giornata '+D.giornata+' · '+D.classifica.length+' squadre · '+D.formazioni.length+' formazioni';
+    return true;
+  }catch(e){console.error('Errore dati:',e);return false;}
+}
+function loadDemo(){
+  var nomi=['I megghiu','Poggisbronzi','AS Matici','Inchiummators','AC Picchia','cuoreneroazzurro','Paris Saint GinLemon','Fc Inter'];
+  D.classifica=nomi.map(function(nm,i){
+    var g=28,v=Math.floor(14-i*1.5),pr=Math.floor(Math.random()*6),n=g-v-pr;
+    var gf=v*3+Math.floor(Math.random()*20),gs=pr*3+Math.floor(Math.random()*20);
+    return{p:i+1,nm:nm,g:g,v:v,n:n,pr:pr,gf:gf,gs2:gs,dr:gf-gs,pts:parseFloat((2000-i*70+Math.random()*50).toFixed(1)),pt:v*3+n};
+  });
+  var ng=['Butez','Gutierrez','Palestra','Norton','Akanji','Theo','Dimarco','Barella','Calhanoglu','Mkhitaryan','Lautaro','Thuram','De Gea','Dumfries','Spinazzola','Bernasconi','Zambo','Fagioli','Verratti','Chiesa','Osimhen','Kvaratskhelia'];
+  D.formazioni=[];D.classifica.forEach(function(t,ti){
+    var st=[],bn=[];
+    ['p','d','d','d','c','c','c','a','a','a'].forEach(function(r,i){
+      var fv=parseFloat((5+Math.random()*4).toFixed(1));
+      st.push({r:r,nm:ng[(ti*10+i)%ng.length],v:fv,fv:fv+(r==='a'&&Math.random()>.7?3:0)});
+    });
+    for(var i=0;i<5;i++){var fv=parseFloat((5+Math.random()*3).toFixed(1));bn.push({r:'c',nm:ng[(ti*10+10+i)%ng.length],v:fv,fv:fv});}
+    var tot=st.concat(bn).reduce(function(s,p){return s+p.fv;},0);
+    D.formazioni.push({nm:t.nm,st:st,bn:bn,md:'4-3-3',tot:parseFloat(tot.toFixed(1))});
+  });
+  D.calendario=[];D.legaNome='Premier Baistaiddi';D.giornata=28;
+  for(var gg=1;gg<=28;gg++){
+    var sh=D.classifica.slice().sort(function(){return Math.random()-.5});
+    for(var i=0;i<sh.length;i+=2){
+      if(i+1>=sh.length)break;
+      var hp=parseFloat((60+Math.random()*60).toFixed(1)),ap=parseFloat((60+Math.random()*60).toFixed(1));
+      D.calendario.push({g:gg,ho:sh[i].nm,hp:hp,ap:ap,aw:sh[i+1].nm,rs:hp+'-'+ap,hg:hp,ag:ap});
+    }
+  }
+  document.getElementById('stateWaiting').style.display='none';
+  document.getElementById('stateReady').style.display='block';
+  document.getElementById('readyTitle').textContent='Dati demo caricati!';
+  document.getElementById('readyInfo').textContent='Premier Baistaiddi · Giornata 28 · Demo';
+}
+loadFromURL();
+
+function doRandom(){var c=document.querySelectorAll('.ck2');var n=2+Math.floor(Math.random()*(c.length-1));var idx=[];for(var i=0;i<c.length;i++)idx.push(i);idx.sort(function(){return Math.random()-.5});var s=idx.slice(0,n);c.forEach(function(x,i){x.classList.toggle('on',s.indexOf(i)>=0)})}
+function gs(){var s={};document.querySelectorAll('.ck2').forEach(function(c){s[c.getAttribute('data-k')]=c.classList.contains('on')});return s}
+
+// ANALYSIS
+function doA(cl,mt,fm){var pl=[],i;for(i=0;i<mt.length;i++)if(mt[i].hg>=0)pl.push(mt[i]);var mxG=0;for(i=0;i<pl.length;i++)if(pl[i].g>mxG)mxG=pl[i].g;var last=[];for(i=0;i<pl.length;i++)if(pl[i].g===mxG)last.push(pl[i]);
+var gfn=function(tn){var tm=[],j;for(j=0;j<pl.length;j++){var m=pl[j];if(m.ho.toLowerCase()===tn.toLowerCase()||m.aw.toLowerCase()===tn.toLowerCase())tm.push(m)}tm.sort(function(a,b){return a.g-b.g});tm=tm.slice(-5);return tm.map(function(m){var h=m.ho.toLowerCase()===tn.toLowerCase();var my=h?m.hg:m.ag,th=h?m.ag:m.hg;return my>th?'V':my===th?'P':'S'})};
+var ap=[];for(i=0;i<fm.length;i++){var t=fm[i];var all=t.st.concat(t.bn);for(var j=0;j<all.length;j++){var fv=parseFloat(all[j].fv),v=parseFloat(all[j].v);if(!isNaN(fv)&&fv>0)ap.push({nm:all[j].nm,fv:fv,v:isNaN(v)?null:v,tm:t.nm})}}ap.sort(function(a,b){return b.fv-a.fv});
+var mvp=ap[0]||null,flop=null;var fl=ap.filter(function(x){return x.fv>0});if(fl.length)flop=fl.sort(function(a,b){return a.fv-b.fv})[0];
+var mxP=0,mxT='',mxM='',mnP=999,mnT='',mnM='';for(i=0;i<pl.length;i++){var m=pl[i];if(m.hp>mxP){mxP=m.hp;mxT=m.ho;mxM=m.rs+' vs '+m.aw}if(m.ap>mxP){mxP=m.ap;mxT=m.aw;mxM=m.rs+' vs '+m.ho}if(m.hp>0&&m.hp<mnP){mnP=m.hp;mnT=m.ho;mnM='vs '+m.aw}if(m.ap>0&&m.ap<mnP){mnP=m.ap;mnT=m.aw;mnM='vs '+m.ho}}
+return{mxG:mxG,last:last,gfn:gfn,mvp:mvp,flop:flop,fm:fm,mxP:mxP,mxT:mxT,mxM:mxM,mnP:mnP,mnT:mnT,mnM:mnM,cl:cl,ap:ap}}
+
+// HEADLINES
+function mkH(a){var f=a.cl[0],s=a.cl[1],l=a.cl[a.cl.length-1],gap=f.pts-s.pts,ms=a.last,pool=[];
+if(gap>=5)pool.push('<span class="ac">Fuga</span> '+f.nm+': +'+gap+'!');else if(gap<=1)pool.push(f.nm+' vs '+s.nm+': <span class="ac">testa a testa!</span>');else pool.push(f.nm+' <span class="ac">al comando</span> a +'+gap);
+var t3=[a.cl[0].nm.toLowerCase(),a.cl[1].nm.toLowerCase()];if(a.cl[2])t3.push(a.cl[2].nm.toLowerCase());
+var bm=null;for(var i=0;i<ms.length;i++)if(t3.indexOf(ms[i].ho.toLowerCase())>=0&&t3.indexOf(ms[i].aw.toLowerCase())>=0){bm=ms[i];break}
+if(bm){var w=bm.hg>bm.ag?bm.ho:bm.hg<bm.ag?bm.aw:null;if(w){pool.push('<span class="ac">Scontro diretto!</span> '+w+' vince '+bm.rs);pool.push(bm.ho+' vs '+bm.aw+': <span class="ac">'+bm.rs+'!</span>')}else pool.push(bm.ho+'-'+bm.aw+' <span class="ac">'+bm.rs+'</span>')}
+for(var i=0;i<ms.length;i++){var m=ms[i];if(m.hg+m.ag>=5){pool.push('<span class="ac">Goleada!</span> '+m.rs+' in '+m.ho+'-'+m.aw);break}}
+if(a.mvp&&a.mvp.fv>=12)pool.push(a.mvp.nm+' <span class="ac">leggenda:</span> fv '+a.mvp.fv+'!');else if(a.mvp&&a.mvp.fv>=9)pool.push(a.mvp.nm+' <span class="ac">show:</span> fv '+a.mvp.fv);
+for(var i=0;i<ms.length;i++){var m=ms[i];if((m.ho.toLowerCase()===f.nm.toLowerCase()&&m.hg<m.ag)||(m.aw.toLowerCase()===f.nm.toLowerCase()&&m.ag<m.hg)){var w2=m.hg>m.ag?m.ho:m.aw;pool.push('<span class="ac">Terremoto!</span> '+f.nm+' cade contro '+w2);break}}
+for(var i=0;i<ms.length;i++){var m=ms[i];if((m.ho.toLowerCase()===s.nm.toLowerCase()&&m.hg<m.ag)||(m.aw.toLowerCase()===s.nm.toLowerCase()&&m.ag<m.hg)){pool.push(s.nm+' <span class="ac">cade!</span> '+f.nm+' a +'+gap);break}}
+for(var i=0;i<ms.length;i++){var m=ms[i];if((m.ho.toLowerCase()===l.nm.toLowerCase()&&m.hg>m.ag)||(m.aw.toLowerCase()===l.nm.toLowerCase()&&m.ag>m.hg)){pool.push('<span class="ac">Impresa</span> '+l.nm+'!');break}}
+for(var i=0;i<ms.length;i++){var m=ms[i];if(m.hp>85||m.ap>85){var t=m.hp>m.ap?m.ho:m.aw;pool.push(t+' <span class="ac">devastante:</span> '+Math.max(m.hp,m.ap)+' pt!');break}}
+return RR(pool)}
+
+function mkS(a){var f=a.cl[0],s=a.cl[1],l=a.cl[a.cl.length-1],gap=f.pts-s.pts,ms=a.last,p=[];
+p.push((gap>0?'+'+gap+' su '+s.nm:' Pari con '+s.nm)+'. '+l.nm+' ultimo.');
+p.push('Capolista a '+f.pts+', '+s.nm+' a '+s.pts+'.');
+var best=ms[0];for(var i=1;i<ms.length;i++)if(Math.max(ms[i].hp,ms[i].ap)>Math.max(best.hp,best.ap))best=ms[i];
+p.push((best.hp>best.ap?best.ho:best.aw)+' miglior punteggio: '+Math.max(best.hp,best.ap)+'.'+(a.mvp?' MVP '+a.mvp.nm+' (fv '+a.mvp.fv+').':''));
+if(a.flop)p.push('Flop '+a.flop.nm+' (fv '+a.flop.fv+').'+(a.mvp?' '+a.mvp.nm+' vola a '+a.mvp.fv+'.':''));
+return RR(p)}
+
+// CRONACA
+function mkCR(a){
+var ops=['La giornata si apre con','Subito emozioni:','Si parte forte:','Non c\'e\' tempo per respirare:','Fischio d\'inizio e subito scintille:','Si alza il sipario e il copione e\' gia\' scritto:','Neanche il tempo di sedersi al fantabar:','Pronti, via, e gia\' si vola:','Il weekend fantacalcistico parte col botto:','Si accendono i motori della '+a.mxG+'a giornata:'];
+var wv=['si impone','trionfa','conquista i tre punti','chiude i conti','porta a casa il bottino pieno','non lascia scampo','ipoteca la vittoria','fa suo il match','regola i conti','stacca il biglietto per i tre punti'];
+var dv=['pareggiano','si dividono la posta','non si fanno male','finiscono con un nulla di fatto','si annullano a vicenda','non riescono a prevalere','si accontentano di un punto','impattano senza sussulti'];
+var bw=['goleada','dominio totale','lezione di fantacalcio','passeggiata di salute','serata da incorniciare','demolizione sistematica','partita a senso unico','mattanza'];
+var tw=['vittoria di misura','successo sofferto','vittoria col brivido','risultato stretto','tre punti sudatissimi','sofferenza e tre punti','vittoria con il cuore in gola','successo di corto muso'];
+var trans=['Cambiando campo,','Nell\'altra sfida del turno,','Spostiamoci sull\'altro campo:','Match diverso, stesse emozioni:','E veniamo alla sfida tra','Scenario completamente diverso:','Altra partita, altra storia:','Passiamo ora a','Merita un capitolo a parte'];
+var h='<div class="abl">Redazione FantaGazzetta - Cronaca completa della '+a.mxG+'a Giornata</div>';
+var first=1;
+for(var i=0;i<a.last.length;i++){var m=a.last[i];
+var t1=null,t2=null;for(var j=0;j<a.fm.length;j++){if(a.fm[j].nm.toLowerCase()===m.ho.toLowerCase())t1=a.fm[j];if(a.fm[j].nm.toLowerCase()===m.aw.toLowerCase())t2=a.fm[j]}
+var isDr=m.hg===m.ag,diff=Math.abs(m.hg-m.ag),win=m.hg>m.ag?m.ho:m.aw,lose=m.hg>m.ag?m.aw:m.ho;
+var winPts=m.hg>m.ag?m.hp:m.ap,losePts=m.hg>m.ag?m.ap:m.hp;
+var gT=function(t){if(!t)return[];return t.st.concat(t.bn).filter(function(p){return!isNaN(parseFloat(p.fv))&&parseFloat(p.fv)>=8}).sort(function(a,b){return parseFloat(b.fv)-parseFloat(a.fv)}).slice(0,3)};
+var gM=function(t){if(!t)return[];return t.st.concat(t.bn).filter(function(p){return!isNaN(parseFloat(p.fv))&&parseFloat(p.fv)>=5.5&&parseFloat(p.fv)<8}).sort(function(a,b){return parseFloat(b.fv)-parseFloat(a.fv)}).slice(0,2)};
+var gW=function(t){if(!t)return[];return t.st.concat(t.bn).filter(function(p){return!isNaN(parseFloat(p.fv))&&parseFloat(p.fv)>0&&parseFloat(p.fv)<5}).sort(function(a,b){return parseFloat(a.fv)-parseFloat(b.fv)}).slice(0,2)};
+var gAbs=function(t){if(!t)return[];return t.st.filter(function(p){return String(p.v)==='-'||String(p.v)==='undefined'})};
+var gBench=function(t){if(!t)return[];return t.bn.filter(function(p){return!isNaN(parseFloat(p.fv))&&parseFloat(p.fv)>=7}).sort(function(a,b){return parseFloat(b.fv)-parseFloat(a.fv)}).slice(0,2)};
+var gBad=function(t){if(!t)return[];return t.bn.filter(function(p){return!isNaN(parseFloat(p.fv))&&parseFloat(p.fv)>0&&parseFloat(p.fv)<4}).sort(function(a,b){return parseFloat(a.fv)-parseFloat(b.fv)}).slice(0,1)};
+
+// PARA 1: apertura + risultato + verdetto
+var p1='';
+if(first){p1+=RR(ops)+' ';first=0}else{p1+=RR(trans)+' '}
+p1+='<span class="bn">'+m.ho+'</span> contro <span class="bn">'+m.aw+'</span>, finisce <span class="si">'+m.rs+'</span> con un computo fantacalcistico di '+m.hp+' a '+m.ap+'. ';
+if(isDr){p1+=RR(['Le due squadre '+RR(dv)+', un risultato che non accontenta nessuno.','Nessun vincitore in una sfida equilibrata fino all\'ultimo fantavoto.','Pareggio che muove la classifica ma lascia l\'amaro in bocca a entrambi.','Un punto a testa: poco per chi voleva vincere, tanto per chi temeva di perdere.'])}
+else if(diff>=3){p1+=win+' '+RR(wv)+' con una '+RR(bw)+'. '+RR(['Un divario netto che non ammette repliche.','Il punteggio non lascia spazio a interpretazioni: dominio assoluto.','Partita chiusa gia\' a meta\' giornata: troppo forte '+win+' per questo '+lose+'.','Una superiorita\' schiacciante che si e\' vista fin dal primo fantavoto.'])}
+else if(diff===2){p1+=win+' '+RR(wv)+' in una partita combattuta. '+RR(['Due gol di scarto che raccontano una superiorita\' chiara ma non travolgente.','Vittoria meritata per '+win+' che ha saputo gestire il vantaggio.',''+lose+' ci ha provato ma alla fine la qualita\' di '+win+' ha fatto la differenza.'])}
+else{p1+=win+' '+RR(wv)+' con una '+RR(tw)+'. '+RR(['Un solo gol di differenza: bastava un fantavoto in piu\' e sarebbe finita diversamente.','Partita decisa sul filo del rasoio: vittoria sofferta ma pesantissima.',''+lose+' puo\' recriminare: il margine era minimo e la sfida poteva andare in entrambi i sensi.','Tre punti d\'oro per '+win+' in una partita da cardiopalma.'])}
+h+='<p>'+p1+'</p>';
+
+// PARA 2: protagonisti e moduli
+var tops1=gT(t1),tops2=gT(t2);
+var allTops=tops1.map(function(x){return{nm:x.nm,fv:parseFloat(x.fv),tm:m.ho}}).concat(tops2.map(function(x){return{nm:x.nm,fv:parseFloat(x.fv),tm:m.aw}})).sort(function(a,b){return b.fv-a.fv});
+var p2='';
+if(t1&&t2)p2+=RR(['Sfida tattica tra il '+t1.md+' di '+m.ho+' e il '+t2.md+' di '+m.aw+'. ',''+m.ho+' schierato col '+t1.md+' contro il '+t2.md+' avversario. ','Moduli a confronto: '+t1.md+' contro '+t2.md+'. ']);
+if(allTops.length>0){
+  p2+=RR(['Sugli scudi','I migliori in campo','Protagonisti assoluti','Da applausi','Standing ovation per','Mattatori della sfida','Si esaltano'])+': ';
+  p2+=allTops.slice(0,4).map(function(x){return'<span class="bn">'+x.nm+'</span> ('+x.tm.split(' ')[0]+', fv '+x.fv+')'}).join(', ')+'. ';
+  if(allTops[0].fv>=10)p2+=RR(['Una prestazione monstre da parte di '+allTops[0].nm+' che da solo vale la giornata. ',''+allTops[0].nm+' ha messo la firma sulla partita con una prestazione da incorniciare. ','Impossibile non notare '+allTops[0].nm+': fantavoto '+allTops[0].fv+' che parla da solo. ']);
+}
+if(p2)h+='<p>'+p2+'</p>';
+
+// PARA 3: flop, assenti, panchina
+var ws1=gW(t1),ws2=gW(t2);var allWs=ws1.map(function(x){return{nm:x.nm,fv:parseFloat(x.fv),tm:m.ho}}).concat(ws2.map(function(x){return{nm:x.nm,fv:parseFloat(x.fv),tm:m.aw}})).sort(function(a,b){return a.fv-b.fv});
+var abs1=gAbs(t1),abs2=gAbs(t2);
+var bench1=gBench(t1),bench2=gBench(t2);var allBench=bench1.map(function(x){return{nm:x.nm,fv:parseFloat(x.fv),tm:m.ho}}).concat(bench2.map(function(x){return{nm:x.nm,fv:parseFloat(x.fv),tm:m.aw}})).sort(function(a,b){return b.fv-a.fv});
+var bad1=gBad(t1),bad2=gBad(t2);
+var p3='';
+if(allWs.length>0){
+  p3+=RR(['Da dimenticare in fretta','Serata da incubo per','Notte fonda per','Fantavoto da brividi per','Meglio stare a casa per','Bocciatura senza appello per'])+' ';
+  p3+=allWs.slice(0,2).map(function(x){return'<span class="bn">'+x.nm+'</span> ('+x.tm.split(' ')[0]+', fv '+x.fv+')'}).join(' e ')+'. ';
+  if(allWs[0].fv<=3)p3+=RR(['Un fantavoto cosi\' basso fa male anche solo a leggerlo. ','Numeri che fanno venire i brividi a qualsiasi fantallenatore. ','Con quel fantavoto meglio non presentarsi al fantabar lunedi\'. ']);
+}
+if(abs1.length>0||abs2.length>0){
+  var totAbs=abs1.length+abs2.length;
+  p3+=RR(['Pesano le assenze: ','Da segnalare i titolari rimasti a casa: ','Non poche le assenze pesanti: ']);
+  if(abs1.length>0)p3+=abs1.length+' titolar'+(abs1.length>1?'i':'e')+' assent'+(abs1.length>1?'i':'e')+' per '+m.ho+(abs1.length<=2?' ('+abs1.map(function(x){return x.nm}).join(', ')+')':'')+'. ';
+  if(abs2.length>0)p3+=abs2.length+' per '+m.aw+(abs2.length<=2?' ('+abs2.map(function(x){return x.nm}).join(', ')+')':'')+'. ';
+}
+if(allBench.length>0){
+  p3+=RR(['Dalla panchina arriva la scossa: ','I subentrati si fanno sentire: ','Decisiva la panchina: ','Chi entra dalla panca incide: ','Le riserve non stanno a guardare: ']);
+  p3+=allBench.slice(0,3).map(function(x){return'<span class="bn">'+x.nm+'</span> ('+x.tm.split(' ')[0]+', fv '+x.fv+')'}).join(', ')+'. ';
+  if(allBench[0].fv>=10)p3+=RR(['Un ingresso devastante che ha cambiato la partita. ','Dalla panca col botto: prestazione da titolare indiscusso. ','Entrato e subito protagonista: cosi\' si guadagna il posto. ']);
+}
+if(p3)h+='<p>'+p3+'</p>';
+
+// PARA 4: contesto classifica (solo per partite top o ultime)
+var top3=a.cl.slice(0,3).map(function(t){return t.nm.toLowerCase()});
+var lastNm=a.cl[a.cl.length-1].nm.toLowerCase();
+var isTopMatch=top3.indexOf(m.ho.toLowerCase())>=0&&top3.indexOf(m.aw.toLowerCase())>=0;
+var involvesLast=m.ho.toLowerCase()===lastNm||m.aw.toLowerCase()===lastNm;
+if(isTopMatch){
+  h+='<p>'+RR(['Scontro diretto tra le big della lega, con implicazioni pesanti sulla classifica. ','Un big match che potrebbe aver segnato una svolta nel campionato. ','Partita da cerchiare in rosso sul calendario: quando si incontrano le prime tre, ogni punto vale triplo. '])+
+  (isDr?RR(['Il pareggio mantiene le distanze invariate: tutto rimandato alla prossima sfida diretta.','Un pari che non cambia gli equilibri ma regala una giornata di tregua armata.']):(win===a.cl[0].nm?RR(['La capolista conferma il suo primato anche negli scontri diretti: un segnale forte per tutta la lega.','Vittoria che sa di scudetto: chi vince gli scontri diretti di solito alza il trofeo.']):RR(['Risultato che riapre la corsa al titolo: nulla e\' deciso, soprattutto non negli scontri diretti.','Colpo grosso che rimette tutto in discussione: la classifica ora fa meno paura.'])))+'</p>';
+}
+if(involvesLast&&!isDr){
+  var lastWon=(m.ho.toLowerCase()===lastNm&&m.hg>m.ag)||(m.aw.toLowerCase()===lastNm&&m.ag>m.hg);
+  if(lastWon)h+='<p>'+RR(['Colpo di coda dell\'ultima della classe! Una vittoria che ridà speranza e ossigeno a una stagione fin qui disastrosa. ','L\'ultima in classifica si toglie una soddisfazione enorme. Non cambiera\' la stagione, ma almeno stasera si festeggia. ','Impresa della cenerentola del campionato: tre punti che valgono piu\' per il morale che per la classifica. '])+'</p>';
+  else h+='<p>'+RR(['Per l\'ultima della classe un\'altra giornata di sofferenza. La classifica piange e le soluzioni sembrano sempre piu\' lontane. ','Ennesima delusione per il fanalino di coda, che sembra aver esaurito le idee per invertire la rotta. ','La coda della classifica non trova pace: un\'altra sconfitta che appesantisce un bilancio gia\' deficitario. '])+'</p>';
+}
+}
+
+// HIGHLIGHT MVP
+if(a.mvp)h+='<div class="ahl">'+RR([a.mvp.nm+' domina la giornata (fv '+a.mvp.fv+')',a.mvp.nm+' re assoluto della '+a.mxG+'a giornata: fantavoto '+a.mvp.fv,'Fv '+a.mvp.fv+' per '+a.mvp.nm+': prestazione da cineteca',a.mvp.nm+' extraterrestre: '+a.mvp.fv+' punti che fanno la storia',a.mvp.nm+' mette tutti in riga con un mostruoso '+a.mvp.fv,a.mvp.nm+' non e\' di questo pianeta (fv '+a.mvp.fv+')',a.mvp.nm+': il fantacalcio si inchina davanti a '+a.mvp.fv+' punti'])+' - '+a.mvp.tm+'</div>';
+return h}
+
+// INTERVISTE
+function mkIN(a){var wt=[function(t,r,p){return['Vittoria meritata. '+p+' punti parlano chiaro.','Mister '+t]},function(t,r,p){return['Il '+r+' e\' giusto. Squadra con carattere.','Capitano '+t]},function(t,r,p){return['Rosa profonda, scelte azzeccate. Stasera si brinda.','DS '+t]},function(t,r,p){return['Col coltello tra i denti: cosi\' si vince. Avanti tutta.','Mister '+t]},function(t,r,p){return['Sapevamo che sarebbe stata dura. Ma questi ragazzi hanno le palle.','Mister '+t]},function(t,r,p){return['Dedico questa vittoria a mia moglie che mi ha sopportato mentre facevo la formazione alle 3 di notte.','Mister '+t]},function(t,r,p){return['Li ho visti allenarsi tutta la settimana su Transfermarkt. Ha pagato.','DS '+t]},function(t,r,p){return['Tre punti e nessun infortunio al fantavoto. Giornata perfetta.','Capitano '+t]},function(t,r,p){return['Ho inserito la formazione 30 secondi prima della chiusura. Come sempre. E come sempre, funziona.','Mister '+t]},function(t,r,p){return['Oggi la panchina ha fatto la differenza. E io l\'avevo previsto. Ok, forse no, ma il risultato parla.','DS '+t]}];
+var lt=[function(t,r,p){return['Giornata storta, '+p+' non bastano. Testa bassa e pedalare.','Mister '+t]},function(t,r,p){return['Scelte sbagliate, colpa mia. Avevo il migliore in panca, me ne prendo la responsabilita\'.','Mister '+t]},function(t,r,p){return['Non molliamo, mancano giornate. Ma oggi fa male.','Capitano '+t]},function(t,r,p){return['Oggi non ha girato. Neanche il caffe\' stamattina era buono, presagio.','DS '+t]},function(t,r,p){return['Ho schierato chi stava meglio. Evidentemente stavano tutti male.','Mister '+t]},function(t,r,p){return['Il fantacalcio e\' crudele. Ma il prossimo turno mi vendico, lo giuro.','Capitano '+t]},function(t,r,p){return['Avevo letto le probabili formazioni su 47 siti diversi. Sbagliavano tutti. E pure io.','Mister '+t]},function(t,r,p){return['Non commento. Anzi si: la prossima volta schiero la formazione col dado.','DS '+t]},function(t,r,p){return['Il mio miglior giocatore ha preso 4.5. Quattro e mezzo. In che mondo?','Mister '+t]},function(t,r,p){return['Mi hanno detto che la panchina ha fatto 20 punti in piu\' della formazione. Non ho parole, solo lacrime.','Mister '+t]}];
+var dt=[function(t,r,p){return['Pareggio stretto, meritavamo di piu\'. Ma il fantacalcio non guarda in faccia nessuno.','Mister '+t]},function(t,r,p){return['Un punto che non soddisfa. Ma neanche una pizza senza mozzarella soddisfa.','DS '+t]},function(t,r,p){return['Partita equilibrata, come il mio conto in banca: zero emozioni.','Capitano '+t]},function(t,r,p){return['Pareggio giusto. Ma "giusto" nel fantacalcio non esiste, esiste solo "non ho vinto".','Mister '+t]},function(t,r,p){return['Un pari che sa di poco. Come il brodo senza sale.','DS '+t]}];
+var mvpt=[function(n,fv,t){return['Giornata magica. Fv '+fv+', ma io penso solo a dare il massimo per chi mi ha schierato.',n+', '+t]},function(n,fv,t){return['Dedico questa prestazione a tutti quelli che mi avevano in panca. Siete voi i veri perdenti.',n+', '+t]},function(n,fv,t){return['Quando sei in grazia lo senti dal primo minuto. Oggi potevo segnare anche da casa.',n+', '+t]},function(n,fv,t){return['Fv '+fv+'? Lo sapevo gia\' da ieri sera. Me l\'ha detto il mio oroscopo.',n+', '+t]},function(n,fv,t){return['Ringrazio chi mi ha schierato. Gli altri... beh, vi capisco. Ma non vi perdono.',n+', '+t]},function(n,fv,t){return['Oggi mi sentivo come Messi al Bernabeu. Anzi, meglio: almeno io ho il bonus difesa.',n+', '+t]},function(n,fv,t){return['Prestazione da incorniciare. La appendo in camerino accanto al poster di Totti.',n+', '+t]}];
+var cards=[];if(a.mvp){var t=RR(mvpt)(a.mvp.nm,a.mvp.fv,a.mvp.tm);cards.push({tm:a.mvp.tm,q:t[0],au:t[1],ro:'MVP'})}
+for(var i=0;i<a.last.length;i++){var m=a.last[i];var isDr=m.hg===m.ag;var w=m.hg>m.ag?m.ho:m.aw;var lo=m.hg>m.ag?m.aw:m.ho;var wp=m.hg>m.ag?m.hp:m.ap;var lp=m.hg>m.ag?m.ap:m.hp;
+if(isDr){var t2=RR(dt)(m.ho,m.rs,m.hp);cards.push({tm:m.ho,q:t2[0],au:t2[1],ro:'Post-partita'})}else{var t3=RR(wt)(w,m.rs,wp);cards.push({tm:w,q:t3[0],au:t3[1],ro:'Vincitore'});var t4=RR(lt)(lo,m.rs,lp);cards.push({tm:lo,q:t4[0],au:t4[1],ro:'Sconfitto'})}}
+var mv=cards[0];var rest=cards.slice(1).sort(function(){return Math.random()-.5}).slice(0,5);return[mv].concat(rest)}
+
+// CLASSIFICA ANALYSIS
+function mkCA(a){var c=a.cl,f=c[0],s=c[1],l=c[c.length-1],gap=f.pts-s.pts,rem=Math.max(0,36-f.g);
+var h='<div class="abl">Redazione FantaGazzetta</div>';
+h+='<p>'+RR(['Con '+rem+' giornate da giocare','Mancano '+rem+' turni al verdetto finale','Il countdown dice '+rem+' giornate','Ancora '+rem+' turni prima del fischio finale','Siamo al rush finale: '+rem+' giornate'])+', <span class="bn">'+f.nm+'</span> guida a '+f.pts+', <span class="bn">'+s.nm+'</span> a '+s.pts+'. '+(gap<=3?RR(['Solo '+gap+' punti: e\' guerra aperta.',''+gap+' punti di niente: basta un weekend storto.','Margine risicato di '+gap+' punti: sara\' battaglia fino all\'ultimo fantavoto.','Solo '+gap+' punti, praticamente un\'inezia.']):RR([gap+' punti di vantaggio: cuscinetto importante.',gap+' lunghezze di distacco: serve un miracolo per chi insegue.',''+gap+' punti: non e\' fatta, ma la strada e\' in discesa.','Vantaggio di '+gap+' punti: chi insegue deve iniziare a pregare.']))+' '+f.nm+': '+f.v+' vittorie, '+f.gf+' gol.</p>';
+if(c.length>3){var mg=c[2].pts-c[c.length-2].pts;h+='<p>Dal 3. al '+(c.length-1)+'. posto: '+Math.abs(mg)+' punti tra '+c[2].nm+' e '+c[c.length-2].nm+'. '+RR(['Tutto aperto: qui si gioca partita per partita.','Ogni punto vale doppio in questa palude.','La classifica e\' compressa come un file ZIP.','Un weekend buono e sali, uno storto e precipiti.','Zona equilibrio: basta niente per salire o affondare.','Classifica piu\' corta di un rigatino.'])+'</p>'}
+h+='<p><span class="bn">'+l.nm+'</span> ultimo: '+l.pts+' pt, '+l.pr+' sconfitte, DR '+l.dr+'. '+RR(['Stagione da dimenticare in fretta.','A questo punto si gioca solo per l\'onore.','Servirebbe un miracolo sportivo. O un hacker.','La matematica non li condanna, ma la realta\' si\'.','Il fondo e\' stato toccato. Forse anche sfondato.','Non c\'e\' luce in fondo al tunnel. Solo un altro 4.5.'])+'</p>';
+return h}
+
+// TATTICO
+function mkTA(a){var h='';for(var i=0;i<a.fm.length;i++){var t=a.fm[i];
+var top=t.st.filter(function(p){return!isNaN(parseFloat(p.fv))&&parseFloat(p.fv)>=8}).sort(function(a,b){return parseFloat(b.fv)-parseFloat(a.fv)});
+var worst=t.st.filter(function(p){return!isNaN(parseFloat(p.fv))&&parseFloat(p.fv)>0&&parseFloat(p.fv)<5.5}).sort(function(a,b){return parseFloat(a.fv)-parseFloat(b.fv)});
+var impact=t.bn.filter(function(p){return!isNaN(parseFloat(p.fv))&&parseFloat(p.fv)>=7.5}).sort(function(a,b){return parseFloat(b.fv)-parseFloat(a.fv)});
+var d='';if(top.length)d+=top.map(function(p){return'<strong>'+p.nm+'</strong> ('+parseFloat(p.fv)+')'}).join(', ')+RR([' trascinano.',' sugli scudi.',' dominano la scena.',' da applausi a scena aperta.',' monumentali.',' giganteschi.',' in versione campione.'])+' ';
+if(worst.length)d+=worst.slice(0,2).map(function(p){return'<strong>'+p.nm+'</strong> ('+parseFloat(p.fv)+')'}).join(', ')+RR([' deludono.',' male, malissimo.',' da rivedere con urgenza.',' bocciati senza appello.',' fantasmi in campo.',' meglio non commentare.',' prestazione da denuncia.'])+' ';
+if(impact.length)d+=RR(['Panca decisiva: ','Riserve d\'oro: ','Dalla panca col botto: ','I subentrati ribaltano tutto: ','Chi entra spacca: ','Panchina piu\' forte dei titolari: '])+impact.map(function(p){return'<strong>'+p.nm+'</strong> ('+parseFloat(p.fv)+')'}).join(', ')+'. ';
+if(!d)d=RR(['Nella media, senza infamia e senza lode.','Prestazione grigia: ne\' carne ne\' pesce.','Nessuno sopra, nessuno sotto: anonimato totale.']);
+h+='<div class="tacc"><div class="tact">'+t.nm+'</div><div class="tacm">'+t.md+' - '+t.tot+'</div><div class="tacd">'+d+'</div></div>'}return h}
+
+// STATS
+function mkST(a){var c=a.cl,gf=c.slice().sort(function(a,b){return b.gf-a.gf}),gs=c.slice().sort(function(a,b){return a.gs2-b.gs2}),av=c.slice().sort(function(a,b){return(b.pt/b.g)-(a.pt/a.g)});
+var h='<div class="abl">Redazione FantaGazzetta</div>';
+h+='<p>'+RR(['I numeri parlano chiaro, come sempre.','Le statistiche non mentono mai. A differenza dei mister.','Apriamo il libro dei numeri. E fa paura.','I dati raccontano la verita\' che le interviste nascondono.','Eccoli, i numeri nudi e crudi. Senza filtri Instagram.'])+' <span class="bn">'+gf[0].nm+'</span>: '+gf[0].gf+' gol (miglior attacco). <span class="bn">'+gs[0].nm+'</span>: '+gs[0].gs2+' subiti (miglior difesa). Media: '+av[0].nm+' '+(av[0].pt/av[0].g).toFixed(1)+', '+av[av.length-1].nm+' '+(av[av.length-1].pt/av[av.length-1].g).toFixed(1)+'.</p>';
+h+='<p>Record: '+a.mxP+' di '+a.mxT+'. Min: '+a.mnP+' di '+a.mnT+'. '+c[0].nm+': '+c[0].v+' vittorie. '+c[c.length-1].nm+': '+c[c.length-1].pr+' sconfitte. '+RR(['Due mondi paralleli.','La stessa moneta, due facce opposte.','Uno ride, l\'altro piange. Da sempre, per sempre.','Come il giorno e la notte, ma con piu\' sofferenza.','Uno compra champagne, l\'altro annacqua il brodo.','Il bello e il brutto del fantacalcio, tutto in due righe.'])+'</p>';return h}
+
+// GENERATE
+function doGen(){try{
+var sec=gs();
+var cl=D.classifica||[];
+var mt=D.calendario||[];
+var fm=D.formazioni||[];
+if(!cl.length){alert('Nessun dato caricato. Prima carica i dati della lega!');return;}
+var a=doA(cl,mt,fm);
+var ln=D.legaNome||'Lega';
+var h='<div class="newspaper" id="np">';
+h+='<div class="hdr"><div class="hdt"><span>Stagione 2025/26</span><span>'+ln+'</span><span>N.'+a.mxG+'</span></div><div class="mhd">FantaGazzetta</div><div class="msd">'+ln+'</div></div>';
+h+='<div class="edb"><span>'+a.mxG+'a Giornata</span><span>'+cl.length+' squadre</span><span>'+new Date().toLocaleDateString('it-IT')+'</span></div>';
+var mvpSub=a.mvp?RR([a.mvp.nm+': fv '+a.mvp.fv,a.mvp.nm+' ('+a.mvp.tm+') fv '+a.mvp.fv,a.mvp.tm+' vola con '+a.mvp.nm]):'';
+h+='<div class="hl"><h1>'+mkH(a)+'<br><span style="font-size:24px">'+mvpSub+'</span></h1><p>'+mkS(a)+'</p></div>';
+h+='<div class="st">Risultati <span class="ac">'+a.mxG+'a Giornata</span></div><div class="mg">';
+for(var i=0;i<a.last.length;i++){var m=a.last[i];h+='<div class="ma"><div class="mt h">'+m.ho+'</div><div class="msb"><div class="mr">'+m.hg+'-'+m.ag+'</div><div class="mp2">'+m.hp+' - '+m.ap+'</div></div><div class="mt a">'+m.aw+'</div></div>'}h+='</div>';
+if(a.mvp&&a.flop)h+='<div class="mvps"><div class="mvpc g"><div class="mvpb">MVP</div><div class="mvpn">'+a.mvp.nm+'</div><div class="mvpv">'+a.mvp.fv+'</div><div class="mvpd">'+a.mvp.tm+'</div></div><div class="mvpc r"><div class="mvpb">FLOP</div><div class="mvpn">'+a.flop.nm+'</div><div class="mvpv">'+a.flop.fv+'</div><div class="mvpd">'+a.flop.tm+'</div></div></div>';
+if(sec.cronaca)h+='<div class="pdv">Cronaca della Giornata</div><div class="art tc dc">'+mkCR(a)+'</div>';
+if(sec.interviste){var ivs=mkIN(a);h+='<div class="pdv">Le Interviste</div><div class="st">Voci dal <span class="ac">Post-Partita</span></div><div class="intg">';for(var i=0;i<ivs.length;i++)h+='<div class="intc"><div class="inth"><div class="intt">'+ivs[i].tm+'</div><div class="intr">'+ivs[i].ro+'</div></div><div class="intq">'+ivs[i].q+'</div><div class="inta">- '+ivs[i].au+'</div></div>';h+='</div>'}
+if(sec.classifica){h+='<div class="pdv">Classifica</div><div class="st">Classifica <span class="ac">Generale</span></div><table class="ct"><thead><tr><th>#</th><th>Squadra</th><th>G</th><th>V</th><th>N</th><th>P</th><th>GF</th><th>GS</th><th>DR</th><th>PtT</th><th>Pts</th></tr></thead><tbody>';
+for(var i=0;i<cl.length;i++){var t=cl[i];h+='<tr><td><span class="pn">'+t.p+'</span></td><td>'+(t.p===1?'&#128081; ':'')+t.nm+'</td><td>'+t.g+'</td><td>'+t.v+'</td><td>'+t.n+'</td><td>'+t.pr+'</td><td>'+t.gf+'</td><td>'+t.gs2+'</td><td><span class="'+(t.dr>0?'dp':t.dr<0?'dnn':'')+'">'+(t.dr>0?'+':'')+t.dr+'</span></td><td>'+t.pt+'</td><td><span class="pc">'+t.pts+'</span></td></tr>'}h+='</tbody></table><div class="art tc">'+mkCA(a)+'</div>'}
+if(sec.tattico)h+='<div class="pdv">Focus Tattico</div><div class="st">Moduli <span class="ac">La Lavagna</span></div><div class="tacg">'+mkTA(a)+'</div>';
+if(sec.statistiche){h+='<div class="pdv">Statistiche</div><div class="st">Numeri <span class="ac">Stagione</span></div>';
+var sgf=cl.slice().sort(function(a,b){return b.gf-a.gf}),sgs=cl.slice().sort(function(a,b){return a.gs2-b.gs2}),sav=cl.slice().sort(function(a,b){return(b.pt/b.g)-(a.pt/a.g)});
+h+='<div class="scol"><div class="sc"><div class="stt">Attacco</div><div class="si2"><span class="sl">'+sgf[0].nm+'</span><span class="sv2 sg">'+sgf[0].gf+'</span></div><div class="si2"><span class="sl">'+sgf[1].nm+'</span><span class="sv2 sg">'+sgf[1].gf+'</span></div><div style="height:10px"></div><div class="stt">Difesa</div><div class="si2"><span class="sl">'+sgs[0].nm+'</span><span class="sv2">'+sgs[0].gs2+'</span></div><div class="si2"><span class="sl">'+sgs[1].nm+'</span><span class="sv2">'+sgs[1].gs2+'</span></div></div>';
+h+='<div class="sc"><div class="stt">Media pt</div><div class="si2"><span class="sl">'+sav[0].nm+'</span><span class="sv2 sg">'+(sav[0].pt/sav[0].g).toFixed(1)+'</span></div><div class="si2"><span class="sl">'+sav[sav.length-1].nm+'</span><span class="sv2 sr">'+(sav[sav.length-1].pt/sav[sav.length-1].g).toFixed(1)+'</span></div><div style="height:10px"></div><div class="stt">Record</div><div class="si2"><span class="sl">Max</span><span class="sv2">'+a.mxP+'</span></div><div class="si2" style="padding-top:0"><span class="sl" style="font-size:9px;color:#888;font-weight:400">'+a.mxT+'</span><span></span></div><div class="si2"><span class="sl">Min</span><span class="sv2 sr">'+a.mnP+'</span></div><div class="si2" style="padding-top:0"><span class="sl" style="font-size:9px;color:#888;font-weight:400">'+a.mnT+'</span><span></span></div></div></div>';
+h+='<div class="st">Forma <span class="ac">Ultime 5</span></div><div class="trs" style="border-bottom:2px solid var(--nero)"><div class="trg">';
+for(var i=0;i<cl.length;i++){var frm=a.gfn(cl[i].nm);h+='<div class="trt"><div class="trn">'+(cl[i].nm.length>12?cl[i].nm.substring(0,11)+'..':cl[i].nm)+'</div><div class="trr">';for(var j=0;j<frm.length;j++)h+='<div class="tdd '+(frm[j]==='V'?'tw':frm[j]==='P'?'tpp':'tll')+'">'+frm[j]+'</div>';h+='</div></div>'}h+='</div></div>';
+h+='<div class="art tc">'+mkST(a)+'</div>'}
+var qs=['"Le panchine decidono piu\' degli allenatori. E noi non abbiamo nemmeno un allenatore."','"Se non vinci e\' colpa del destino. E della tua formazione delle 3 di notte."','"Ho il migliore in panca. Con 10. Non ne voglio parlare."','"Quest\'anno vinco io. Lo dico da 12 anni. Quest\'anno e\' diverso. Forse."','"La differenza tra genio e coglione: una giornata di fantacalcio."','"Il lunedi\' mattina si divide in due categorie: chi ha vinto e chi mente."','"Ho cambiato formazione 47 volte. L\'ultima, quella sbagliata, alle 14:59."','"Il mio avversario ha schierato uno che non giocava da 3 mesi. Ha fatto 12."','"Nel fantacalcio l\'unica certezza e\' che il tuo capitano prendera\' 5."','"Ho sognato la formazione perfetta. Poi mi sono svegliato e ho messo Leao."','"Chi dice che il fantacalcio non e\' uno sport non ha mai perso per un -1."','"Mia moglie mi ha chiesto: me o il fantacalcio? Mi manca, a volte."','"Non ho dormito per scegliere tra due centrocampisti. Hanno fatto entrambi 5.5."','"L\'unico posto dove un portiere da 3.5 rovina un\'intera settimana."','"Schiero sempre il giocatore sbagliato. E\' un talento anche questo."','"Il fantacalcio e\' l\'unico gioco dove paghi per soffrire."','"Ho piu\' rimpianti al fantacalcio che nella vita vera."','"Il mio fantavoto medio e\' piu\' basso della mia autostima."','"Gioco a fantacalcio per sentirmi vivo. E per morire dentro ogni lunedi\'."'];
+h+='<div class="qbar">'+RR(qs)+'</div><div class="ftr"><span>FantaGazzetta</span><span>'+ln+'</span><span>Powered by AI</span></div></div>';
+
+// HIDE SETUP, SHOW ONLY NEWSPAPER
+document.getElementById('setup').style.display='none';
+document.getElementById('out').innerHTML=h;
+}catch(e){alert('Errore: '+e.message);console.error(e)}}
+</script>
+</body>
+</html>
