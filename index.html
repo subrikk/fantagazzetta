@@ -141,7 +141,7 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
 
 <div id="setup">
   <div class="logo">FantaGazzetta</div>
-  <div class="sub">FantaGazzetta Generator · v8.10</div>
+  <div class="sub">FantaGazzetta Generator · v8.11</div>
 
   <!-- STATO: attesa dati -->
   <div id="stateWaiting">
@@ -291,7 +291,7 @@ function dbg(msg){
   b.innerHTML+=msg+'<br>';
 }
 function loadFromURL(){
-  dbg('v8.10 · checking URL...');
+  dbg('v8.11 · checking URL...');
   var params=new URLSearchParams(window.location.search);
   var data=params.get('d');
   if(!data){dbg('Nessun dato in URL');return false;}
@@ -660,8 +660,7 @@ if(sec.statistiche){h+='<div class="pdv">Statistiche</div><div class="st">Numeri
 var sgf=cl.slice().sort(function(a,b){return b.gf-a.gf}),sgs=cl.slice().sort(function(a,b){return a.gs2-b.gs2}),sav=cl.slice().sort(function(a,b){return(b.pt/b.g)-(a.pt/a.g)});
 h+='<div class="scol"><div class="sc"><div class="stt">Attacco</div><div class="si2"><span class="sl">'+sgf[0].nm+'</span><span class="sv2 sg">'+sgf[0].gf+'</span></div><div class="si2"><span class="sl">'+sgf[1].nm+'</span><span class="sv2 sg">'+sgf[1].gf+'</span></div><div style="height:10px"></div><div class="stt">Difesa</div><div class="si2"><span class="sl">'+sgs[0].nm+'</span><span class="sv2">'+sgs[0].gs2+'</span></div><div class="si2"><span class="sl">'+sgs[1].nm+'</span><span class="sv2">'+sgs[1].gs2+'</span></div></div>';
 h+='<div class="sc"><div class="stt">Media pt</div><div class="si2"><span class="sl">'+sav[0].nm+'</span><span class="sv2 sg">'+(sav[0].pt/sav[0].g).toFixed(1)+'</span></div><div class="si2"><span class="sl">'+sav[sav.length-1].nm+'</span><span class="sv2 sr">'+(sav[sav.length-1].pt/sav[sav.length-1].g).toFixed(1)+'</span></div><div style="height:10px"></div><div class="stt">Record</div><div class="si2"><span class="sl">Max</span><span class="sv2">'+a.mxP+'</span></div><div class="si2" style="padding-top:0"><span class="sl" style="font-size:9px;color:#888;font-weight:400">'+a.mxT+'</span><span></span></div><div class="si2"><span class="sl">Min</span><span class="sv2 sr">'+a.mnP+'</span></div><div class="si2" style="padding-top:0"><span class="sl" style="font-size:9px;color:#888;font-weight:400">'+a.mnT+'</span><span></span></div></div></div>';
-h+='<div class="st">Forma <span class="ac">Ultime 5</span></div><div class="trs" style="border-bottom:2px solid var(--nero)"><div class="trg">';
-for(var i=0;i<cl.length;i++){var frm=a.gfn(cl[i].nm);h+='<div class="trt"><div class="trn">'+(cl[i].nm.length>12?cl[i].nm.substring(0,11)+'..':cl[i].nm)+'</div><div class="trr">';for(var j=0;j<frm.length;j++)h+='<div class="tdd '+(frm[j]==='V'?'tw':frm[j]==='P'?'tpp':'tll')+'">'+frm[j]+'</div>';h+='</div></div>'}h+='</div></div>';
+
 h+='<div class="art tc">'+mkST(a)+'</div>'}
 if(sec.pagelle)h+='<div class="pdv">Pagelle del Mister</div><div class="st">Il <span class="ac">Giudizio</span> della Redazione</div><div class="tacg">'+mkPG(a)+'</div>';
 if(sec.termometro)h+='<div class="pdv">Termometro della Lega</div><div class="st">Chi <span class="ac">Sale</span> e Chi <span class="ac">Scende</span></div><div class="art tc">'+mkTM(a)+'</div>';
@@ -698,7 +697,7 @@ var qs=[
 '"Ho il capitano che prende sempre 6. Non segna, non assist, non ammonizioni. Esiste solo per deludermi."',
 '"Quest\'anno ho studiato le statistiche, letto gli esperti, analizzato i dati. Sono penultimo."'
 ];
-h+='<div class="qbar">'+RR(qs)+'</div><div class="ftr"><span>FantaGazzetta</span><span>'+ln+'</span><span>Powered by AI · v8.10</span></div></div>';
+h+='<div class="qbar">'+RR(qs)+'</div><div class="ftr"><span>FantaGazzetta</span><span>'+ln+'</span><span>Powered by AI · v8.11</span></div></div>';
 document.getElementById('setup').style.display='none';
 document.getElementById('out').innerHTML=h;
 }catch(e){alert('Errore: '+e.message);console.error(e)}}
