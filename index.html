@@ -263,10 +263,11 @@ function buildBookmarklet(){
         'm.teams.forEach(function(t){'+
           'var st=[],bn=[];'+
           '(t.players||[]).forEach(function(p){'+
-            'var o={r:p.role||"c",nm:p.name||"",v:p.vote||0,fv:p.fantagrade||p.grade||0};'+
-            'if(p.reserve)bn.push(o);else st.push(o);'+
+            'st.push({r:p.role||"c",nm:p.name||"",v:parseFloat(p.vote)||0,fv:parseFloat(p.fantagrade)||0});'+
           '});'+
-          '(t.reserves||[]).forEach(function(p){bn.push({r:p.role||"c",nm:p.name||"",v:p.vote||0,fv:p.fantagrade||p.grade||0});});'+
+          '(t.reserves||[]).forEach(function(p){'+
+            'bn.push({r:p.role||"c",nm:p.name||"",v:parseFloat(p.vote)||0,fv:parseFloat(p.fantagrade)||0});'+
+          '});'+
           'fm.push({nm:t.name||"",st:st,bn:bn,md:(t.schemes&&t.schemes[0])||"4-3-3",tot:parseFloat(t.score)||0});'+
         '});'+
       '});return fm;}'+
@@ -529,6 +530,15 @@ var cl=D.classifica||[];
 var mt=D.calendario||[];
 var fm=D.formazioni||[];
 if(!cl.length){alert('Nessun dato caricato. Prima carica i dati della lega!');return;}
+// Se il calendario è vuoto ma abbiamo le formazioni, costruiamo partite dal calendario formazioni
+if(!mt.length&&fm.length>=2){
+  var g=D.giornata||28;
+  for(var i=0;i<fm.length;i+=2){
+    if(i+1>=fm.length)break;
+    var hp=fm[i].tot||0,ap=fm[i+1].tot||0;
+    mt.push({g:g,ho:fm[i].nm,hp:hp,ap:ap,aw:fm[i+1].nm,rs:hp+'-'+ap,hg:hp,ag:ap});
+  }
+}
 var a=doA(cl,mt,fm);
 var ln=D.legaNome||'Lega';
 var h='<div class="newspaper" id="np">';
