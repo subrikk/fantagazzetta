@@ -141,7 +141,7 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
 
 <div id="setup">
   <div class="logo">FantaGazzetta</div>
-  <div class="sub">FantaGazzetta Generator · v8.8</div>
+  <div class="sub">FantaGazzetta Generator · v8.10</div>
 
   <!-- STATO: attesa dati -->
   <div id="stateWaiting">
@@ -191,6 +191,9 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
         <div class="ck2 on" data-k="classifica"><div class="bx">✓</div><span>Classifica e analisi</span></div>
         <div class="ck2 on" data-k="tattico"><div class="bx">✓</div><span>Focus tattico</span></div>
         <div class="ck2 on" data-k="statistiche"><div class="bx">✓</div><span>Statistiche stagione</span></div>
+        <div class="ck2 on" data-k="pagelle"><div class="bx">✓</div><span>Pagelle del Mister</span></div>
+        <div class="ck2 on" data-k="termometro"><div class="bx">✓</div><span>Termometro della lega</span></div>
+        <div class="ck2 on" data-k="prossima"><div class="bx">✓</div><span>Prossima giornata</span></div>
       </div>
     </div>
 
@@ -217,6 +220,9 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
         <div class="ck2 on" data-k="classifica"><div class="bx">✓</div><span>Classifica e analisi</span></div>
         <div class="ck2 on" data-k="tattico"><div class="bx">✓</div><span>Focus tattico</span></div>
         <div class="ck2 on" data-k="statistiche"><div class="bx">✓</div><span>Statistiche stagione</span></div>
+        <div class="ck2 on" data-k="pagelle"><div class="bx">✓</div><span>Pagelle del Mister</span></div>
+        <div class="ck2 on" data-k="termometro"><div class="bx">✓</div><span>Termometro della lega</span></div>
+        <div class="ck2 on" data-k="prossima"><div class="bx">✓</div><span>Prossima giornata</span></div>
       </div>
       <div class="btns" style="margin-top:8px">
         <button class="bt bran" onclick="doRandom()">🎲 Random</button>
@@ -259,7 +265,7 @@ function buildBookmarklet(){
     'b2.style.cssText="position:fixed;top:0;left:0;right:0;background:#27ae60;color:#fff;font-family:sans-serif;font-size:15px;font-weight:bold;text-align:center;padding:14px;z-index:99999;box-shadow:0 3px 10px rgba(0,0,0,.4)";'+
     'b2.innerHTML="⚽ FantaGazzetta: estraggo i dati della giornata "+giornata+"...";'+
     'document.body.appendChild(b2);'+
-    'function exFm(matches){var fm=[];(matches||[]).forEach(function(m){if(!m.teams||m.teams.length<2||!m.calculated)return;m.teams.forEach(function(t){var st=[],bn=[];(t.players||[]).forEach(function(p){st.push([p.role||"c",p.name||"",parseFloat(p.fantagrade)||0]);});(t.reserves||[]).forEach(function(p){bn.push([p.role||"c",p.name||"",parseFloat(p.fantagrade)||0]);});fm.push({n:t.name||"",m:(t.schemes&&t.schemes[0])||"4-3-3",tot:parseFloat(t.score)||0,st:st,bn:bn});});});return fm;}'+
+    'function exFm(matches){var fm=[];(matches||[]).forEach(function(m){if(!m.teams||m.teams.length<2||!m.calculated)return;m.teams.forEach(function(t){var st=[],bn=[];(t.players||[]).forEach(function(p){st.push([p.role[0]||"c",p.name.substring(0,13),Math.round((parseFloat(p.fantagrade)||0)*2)/2]);});(t.reserves||[]).forEach(function(p){var fv=Math.round((parseFloat(p.fantagrade)||0)*2)/2;if(fv>0)bn.push([p.role[0]||"c",p.name.substring(0,13),fv]);});bn.sort(function(a,b){return b[2]-a[2];});bn=bn.slice(0,5);fm.push({n:t.name||"",m:(t.schemes&&t.schemes[0])||"4-3-3",tot:parseFloat(t.score)||0,st:st,bn:bn});});});return fm;}'+
     'function exCa(matches,g){var ca=[];(matches||[]).forEach(function(m){if(!m.teams||m.teams.length<2||!m.calculated)return;var hp=parseFloat(m.teams[0].score)||0,ap=parseFloat(m.teams[1].score)||0;ca.push([m.teams[0].name,hp,ap,m.teams[1].name]);});return ca;}'+
     'function exCl(html){var p=new DOMParser(),doc=p.parseFromString(html,"text/html"),rows=doc.querySelectorAll("table.smart-table tr"),cl=[];rows.forEach(function(tr){var cells=Array.from(tr.querySelectorAll("td")).map(function(c){return c.textContent.trim();});if(cells.length<10)return;var nm=cells[2].replace(/^\\d+/,"").replace(/\\d+$/,"").trim();if(!nm||nm.length<2)return;var g=parseInt(cells[3])||0;if(g<1)return;cl.push([nm,g,parseInt(cells[4])||0,parseInt(cells[5])||0,parseInt(cells[6])||0,parseInt(cells[7])||0,parseInt(cells[8])||0,parseFloat((cells[10]||"0").replace(",","."))||0,parseInt(cells[9])||0]);});return cl;}'+
     'var base=window.location.origin+"/"+slug;'+
@@ -285,7 +291,7 @@ function dbg(msg){
   b.innerHTML+=msg+'<br>';
 }
 function loadFromURL(){
-  dbg('v8.8 · checking URL...');
+  dbg('v8.10 · checking URL...');
   var params=new URLSearchParams(window.location.search);
   var data=params.get('d');
   if(!data){dbg('Nessun dato in URL');return false;}
@@ -509,6 +515,117 @@ var h='<div class="abl">Redazione FantaGazzetta</div>';
 h+='<p>'+RR(['I numeri parlano chiaro, come sempre.','Le statistiche non mentono mai. A differenza dei mister.','Apriamo il libro dei numeri. E fa paura.','I dati raccontano la verita\' che le interviste nascondono.','Eccoli, i numeri nudi e crudi. Senza filtri Instagram.'])+' <span class="bn">'+gf[0].nm+'</span>: '+gf[0].gf+' gol (miglior attacco). <span class="bn">'+gs[0].nm+'</span>: '+gs[0].gs2+' subiti (miglior difesa). Media: '+av[0].nm+' '+(av[0].pt/av[0].g).toFixed(1)+', '+av[av.length-1].nm+' '+(av[av.length-1].pt/av[av.length-1].g).toFixed(1)+'.</p>';
 h+='<p>Record: '+a.mxP+' di '+a.mxT+'. Min: '+a.mnP+' di '+a.mnT+'. '+c[0].nm+': '+c[0].v+' vittorie. '+c[c.length-1].nm+': '+c[c.length-1].pr+' sconfitte. '+RR(['Due mondi paralleli.','La stessa moneta, due facce opposte.','Uno ride, l\'altro piange. Da sempre, per sempre.','Come il giorno e la notte, ma con piu\' sofferenza.','Uno compra champagne, l\'altro annacqua il brodo.','Il bello e il brutto del fantacalcio, tutto in due righe.'])+'</p>';return h}
 
+// PAGELLE DEL MISTER
+function mkPG(a){
+  var h='<div class="abl">Redazione FantaGazzetta - Pagelle del Mister</div>';
+  var voti=['4','4.5','5','5.5','6','6.5','7','7.5','8','8.5','9','9.5','10'];
+  var commenti={
+    4:['Disastro totale. La panchina ha segnato più dei titolari.','Formazione da denuncia. Il dado avrebbe fatto meglio.','Ha schierato chi non giocava da tre giornate. Intuizione sbagliata.'],
+    5:['Scelte discutibili. Troppe sorprese negative tra i titolari.','Il modulo era giusto, i giocatori sbagliati.','Ci ha provato, ma il mercato del giugno scorso si è vendicato.'],
+    6:['Nella media. Né lodi né fischi.','Gestione ordinaria: niente di eccezionale, niente di grave.','Formazione senza infamia e senza lode. Come il caffè del distributore.'],
+    7:['Buone scelte, risultato positivo. Merita un applauso.','Ha letto la giornata meglio degli altri. Chapeau.','Modulo indovinato e qualche intuizione azzeccata.'],
+    8:['Ottima lettura della giornata. La panchina era un muro.','Scelte coraggiose che hanno pagato. Mister della settimana.','Ha fatto le scelte giuste quando contava. Rispetto.'],
+    9:['Prestazione da manuale. Tutto funzionava.','Formazione perfetta o quasi. I titolari hanno risposto presente.','Quando il fantacalcio è strategia vera. Lezione per tutti.'],
+    10:['Capolavoro assoluto. Non si poteva fare meglio.','Tutto al posto giusto. Una formazione da studiare nelle accademie.','Il Guardiola del fantacalcio. Almeno per questa giornata.']
+  };
+  a.fm.forEach(function(t){
+    // Calcola voto basato su: media fv titolari vs media fv panchina
+    var stFv=t.st.map(function(p){return parseFloat(p.fv)||0;}).filter(function(v){return v>0;});
+    var bnFv=t.bn.map(function(p){return parseFloat(p.fv)||0;}).filter(function(v){return v>0;});
+    if(!stFv.length)return;
+    var avgSt=stFv.reduce(function(s,v){return s+v;},0)/stFv.length;
+    var avgBn=bnFv.length?bnFv.reduce(function(s,v){return s+v;},0)/bnFv.length:avgSt;
+    // Voto base dalla media titolari, penalizzato se la panchina ha fatto molto meglio
+    var votoRaw=Math.min(10,Math.max(4,avgSt-5.5+6));
+    if(avgBn>avgSt+1)votoRaw-=1; // panchina molto meglio → penalità
+    if(avgBn<avgSt-1)votoRaw+=0.5; // titolari molto meglio della panchina → bonus
+    votoRaw=Math.round(votoRaw*2)/2;
+    votoRaw=Math.min(10,Math.max(4,votoRaw));
+    var vk=Math.round(votoRaw);
+    var comm=commenti[vk]||commenti[6];
+    var best=t.st.concat(t.bn).filter(function(p){return parseFloat(p.fv)>=8;}).sort(function(a,b){return b.fv-a.fv;})[0];
+    var worst=t.st.filter(function(p){return parseFloat(p.fv)>0&&parseFloat(p.fv)<5;}).sort(function(a,b){return a.fv-b.fv;})[0];
+    var note='';
+    if(best)note+=' MVP schierato: <strong>'+best.nm+'</strong> (fv '+best.fv+').';
+    if(worst)note+=' Punto debole: <strong>'+worst.nm+'</strong> (fv '+worst.fv+').';
+    h+='<div class="tacc"><div class="tact">'+t.nm+'</div>';
+    h+='<div class="tacm" style="font-size:16px;color:'+(votoRaw>=7?'var(--verde)':votoRaw>=6?'#f39c12':'var(--rosso)')+'">'+votoRaw+' / 10</div>';
+    h+='<div class="tacd">'+RR(comm)+note+'</div></div>';
+  });
+  return h;
+}
+
+// TERMOMETRO DELLA LEGA
+function mkTM(a){
+  var h='<div class="abl">Redazione FantaGazzetta - Forma Ultime 3 Giornate</div>';
+  var cl=a.cl;
+  var termData=cl.map(function(t){
+    var frm=a.gfn(t.nm).slice(-3);
+    var score=frm.reduce(function(s,r){return s+(r==='V'?3:r==='P'?1:0);},0);
+    return{nm:t.nm,pts:t.pts,frm:frm,score:score};
+  }).sort(function(a,b){return b.score-a.score;});
+  var hot=termData.slice(0,2);
+  var cold=termData.slice(-2);
+  h+='<p>';
+  h+='<span style="color:var(--rosso);font-weight:900">🔥 IN FORMA: </span>';
+  hot.forEach(function(t,i){
+    var frm=t.frm.map(function(r){return r==='V'?'<span style="color:var(--verde);font-weight:700">V</span>':r==='P'?'<span style="color:#f39c12;font-weight:700">P</span>':'<span style="color:var(--rosso);font-weight:700">S</span>';}).join(' ');
+    h+='<span class="bn">'+t.nm+'</span> ['+frm+'] '+RR(['fuoco alle polveri.','inarrestabile.','in stato di grazia.','caldo come la lava.','non si ferma più.'])+' ';
+  });
+  h+='</p><p>';
+  h+='<span style="color:#888;font-weight:900">❄️ IN DIFFICOLTÀ: </span>';
+  cold.forEach(function(t,i){
+    var frm=t.frm.map(function(r){return r==='V'?'<span style="color:var(--verde);font-weight:700">V</span>':r==='P'?'<span style="color:#f39c12;font-weight:700">P</span>':'<span style="color:var(--rosso);font-weight:700">S</span>';}).join(' ');
+    h+='<span class="bn">'+t.nm+'</span> ['+frm+'] '+RR(['in caduta libera.','attraversa un momento buio.','cerca la luce in fondo al tunnel.','serve un esorcismo.','il calendario non aiuta, ma neanche la formazione.'])+' ';
+  });
+  h+='</p>';
+  var mid=termData.filter(function(t){return t.score===3||t.score===4;});
+  if(mid.length>0){
+    h+='<p><span style="color:#aaa;font-weight:700">⚖️ NELLA MEDIA: </span>';
+    h+=mid.map(function(t){return'<span class="bn">'+t.nm+'</span>';}).join(', ')+'. '+RR(['Né carne né pesce. Ma almeno non affondano.','Galleggiano. Il fantacalcio del sopravvissuto.','Stabili come il meteo siciliano a maggio.','Un punto qui, tre là. Nessuna continuità.'])+'</p>';
+  }
+  return h;
+}
+
+// PROSSIMA GIORNATA
+function mkPR(a){
+  var h='<div class="abl">Redazione FantaGazzetta - Anteprima '+( a.mxG+1)+'a Giornata</div>';
+  var cl=a.cl;
+  var mt=a.last;
+  // Costruiamo gli scontri della prossima giornata ruotando le partite (semplificato)
+  var prossimi=[];
+  // Usa le stesse coppie dell'ultima giornata in ordine invertito come preview
+  for(var i=0;i<mt.length;i++){
+    var m=mt[i];
+    var ho=cl.find(function(t){return t.nm.toLowerCase()===m.aw.toLowerCase();});
+    var aw=cl.find(function(t){return t.nm.toLowerCase()===m.ho.toLowerCase();});
+    if(ho&&aw)prossimi.push({ho:ho,aw:aw});
+  }
+  if(!prossimi.length){h+='<p>Dati prossima giornata non disponibili.</p>';return h;}
+  h+='<p>'+RR(['Si torna in campo. Ecco cosa aspettarsi dalla '+( a.mxG+1)+'a giornata.','Il campionato non si ferma. Analizziamo le sfide in arrivo.','Archiviata la '+a.mxG+'a, già si guarda avanti. Chi avrà il destino in mano?','La redazione analizza gli scontri della prossima settimana.'])+'</p>';
+  prossimi.forEach(function(sfida){
+    var ho=sfida.ho,aw=sfida.aw;
+    var gapPts=Math.abs(ho.pts-aw.pts);
+    var fav=ho.pts>aw.pts?ho:aw;
+    var und=ho.pts>aw.pts?aw:ho;
+    var frm1=a.gfn(ho.nm).slice(-3);
+    var frm2=a.gfn(aw.nm).slice(-3);
+    var score1=frm1.reduce(function(s,r){return s+(r==='V'?3:r==='P'?1:0);},0);
+    var score2=frm2.reduce(function(s,r){return s+(r==='V'?3:r==='P'?1:0);},0);
+    h+='<p><span class="bn">'+ho.nm+'</span> vs <span class="bn">'+aw.nm+'</span> — ';
+    if(gapPts<5){
+      h+=RR(['Equilibrio totale in classifica: tutto può succedere.','Sfida apertissima tra due squadre vicine in classifica.','Nessun favorito chiaro: dipenderà tutto dalle scelte di formazione.']);
+    } else {
+      h+='<span class="bn">'+fav.nm+'</span> parte favorito (+'+gapPts.toFixed(1)+' pts), ma ';
+      h+=RR(['nel fantacalcio niente è scontato.',''+und.nm+' potrebbe sorprendere.','la classifica può ingannare.','un capitano in forma ribalta tutto.']);
+    }
+    if(score1>score2)h+=' <span class="bn">'+ho.nm+'</span> arriva in forma migliore.';
+    else if(score2>score1)h+=' <span class="bn">'+aw.nm+'</span> è il più in palla del momento.';
+    h+='</p>';
+  });
+  return h;
+}
+
 // GENERATE
 function doGen(){try{
 var sec=gs();
@@ -516,7 +633,6 @@ var cl=D.classifica||[];
 var mt=D.calendario||[];
 var fm=D.formazioni||[];
 if(!cl.length){alert('Nessun dato caricato. Prima carica i dati della lega!');return;}
-// Se il calendario è vuoto ma abbiamo le formazioni, costruiamo partite dal calendario formazioni
 if(!mt.length&&fm.length>=2){
   var g=D.giornata||28;
   for(var i=0;i<fm.length;i+=2){
@@ -547,10 +663,42 @@ h+='<div class="sc"><div class="stt">Media pt</div><div class="si2"><span class=
 h+='<div class="st">Forma <span class="ac">Ultime 5</span></div><div class="trs" style="border-bottom:2px solid var(--nero)"><div class="trg">';
 for(var i=0;i<cl.length;i++){var frm=a.gfn(cl[i].nm);h+='<div class="trt"><div class="trn">'+(cl[i].nm.length>12?cl[i].nm.substring(0,11)+'..':cl[i].nm)+'</div><div class="trr">';for(var j=0;j<frm.length;j++)h+='<div class="tdd '+(frm[j]==='V'?'tw':frm[j]==='P'?'tpp':'tll')+'">'+frm[j]+'</div>';h+='</div></div>'}h+='</div></div>';
 h+='<div class="art tc">'+mkST(a)+'</div>'}
-var qs=['"Le panchine decidono piu\' degli allenatori. E noi non abbiamo nemmeno un allenatore."','"Se non vinci e\' colpa del destino. E della tua formazione delle 3 di notte."','"Ho il migliore in panca. Con 10. Non ne voglio parlare."','"Quest\'anno vinco io. Lo dico da 12 anni. Quest\'anno e\' diverso. Forse."','"La differenza tra genio e coglione: una giornata di fantacalcio."','"Il lunedi\' mattina si divide in due categorie: chi ha vinto e chi mente."','"Ho cambiato formazione 47 volte. L\'ultima, quella sbagliata, alle 14:59."','"Il mio avversario ha schierato uno che non giocava da 3 mesi. Ha fatto 12."','"Nel fantacalcio l\'unica certezza e\' che il tuo capitano prendera\' 5."','"Ho sognato la formazione perfetta. Poi mi sono svegliato e ho messo Leao."','"Chi dice che il fantacalcio non e\' uno sport non ha mai perso per un -1."','"Mia moglie mi ha chiesto: me o il fantacalcio? Mi manca, a volte."','"Non ho dormito per scegliere tra due centrocampisti. Hanno fatto entrambi 5.5."','"L\'unico posto dove un portiere da 3.5 rovina un\'intera settimana."','"Schiero sempre il giocatore sbagliato. E\' un talento anche questo."','"Il fantacalcio e\' l\'unico gioco dove paghi per soffrire."','"Ho piu\' rimpianti al fantacalcio che nella vita vera."','"Il mio fantavoto medio e\' piu\' basso della mia autostima."','"Gioco a fantacalcio per sentirmi vivo. E per morire dentro ogni lunedi\'."'];
-h+='<div class="qbar">'+RR(qs)+'</div><div class="ftr"><span>FantaGazzetta</span><span>'+ln+'</span><span>Powered by AI</span></div></div>';
-
-// HIDE SETUP, SHOW ONLY NEWSPAPER
+if(sec.pagelle)h+='<div class="pdv">Pagelle del Mister</div><div class="st">Il <span class="ac">Giudizio</span> della Redazione</div><div class="tacg">'+mkPG(a)+'</div>';
+if(sec.termometro)h+='<div class="pdv">Termometro della Lega</div><div class="st">Chi <span class="ac">Sale</span> e Chi <span class="ac">Scende</span></div><div class="art tc">'+mkTM(a)+'</div>';
+if(sec.prossima)h+='<div class="pdv">Prossima Giornata</div><div class="st">Anteprima <span class="ac">'+(a.mxG+1)+'a Giornata</span></div><div class="art tc">'+mkPR(a)+'</div>';
+var qs=[
+'"Le panchine decidono più degli allenatori. E noi non abbiamo nemmeno un allenatore."',
+'"Se non vinci è colpa del destino. E della tua formazione delle 3 di notte."',
+'"Ho il migliore in panca. Con 10. Non ne voglio parlare."',
+'"Quest\'anno vinco io. Lo dico da 12 anni. Quest\'anno è diverso. Forse."',
+'"La differenza tra genio e coglione: una giornata di fantacalcio."',
+'"Il lunedì mattina si divide in due categorie: chi ha vinto e chi mente."',
+'"Ho cambiato formazione 47 volte. L\'ultima, quella sbagliata, alle 14:59."',
+'"Il mio avversario ha schierato uno che non giocava da 3 mesi. Ha fatto 12."',
+'"Nel fantacalcio l\'unica certezza è che il tuo capitano prenderà 5."',
+'"Ho sognato la formazione perfetta. Poi mi sono svegliato e ho messo Leao."',
+'"Chi dice che il fantacalcio non è uno sport non ha mai perso per un -1."',
+'"Mia moglie mi ha chiesto: me o il fantacalcio? Mi manca, a volte."',
+'"Non ho dormito per scegliere tra due centrocampisti. Hanno fatto entrambi 5.5."',
+'"L\'unico posto dove un portiere da 3.5 rovina un\'intera settimana."',
+'"Schiero sempre il giocatore sbagliato. È un talento anche questo."',
+'"Il fantacalcio è l\'unico gioco dove paghi per soffrire."',
+'"Ho più rimpianti al fantacalcio che nella vita vera."',
+'"Il mio fantavoto medio è più basso della mia autostima."',
+'"Gioco a fantacalcio per sentirmi vivo. E per morire dentro ogni lunedì."',
+'"Il VAR non esiste nel fantacalcio. Solo il rimorso."',
+'"Ho preso un attaccante in asta per 40 crediti. Ha fatto 5 in tutta la stagione. È ancora mio."',
+'"Il fantacalcio è l\'unico sport dove puoi perdere anche quando vinci."',
+'"Ho guardato le probabili formazioni di 12 siti. Sbagliavano tutti. Pure io."',
+'"Il mio centrocampista titolare gioca. Il mio centrocampista in panchina segna una tripletta."',
+'"Ogni domenica mi dico: stavolta niente stress. Poi arriva il 45\' e già impreco."',
+'"Ho fatto la formazione perfetta. L\'ho salvata per sbaglio con un nome diverso. Non l\'ho più trovata."',
+'"Il fantacalcio mi ha insegnato che il talento non basta. Serve anche il calendario."',
+'"Non è colpa mia. È colpa del modulo. E dell\'allenatore vero. E della luna."',
+'"Ho il capitano che prende sempre 6. Non segna, non assist, non ammonizioni. Esiste solo per deludermi."',
+'"Quest\'anno ho studiato le statistiche, letto gli esperti, analizzato i dati. Sono penultimo."'
+];
+h+='<div class="qbar">'+RR(qs)+'</div><div class="ftr"><span>FantaGazzetta</span><span>'+ln+'</span><span>Powered by AI · v8.10</span></div></div>';
 document.getElementById('setup').style.display='none';
 document.getElementById('out').innerHTML=h;
 }catch(e){alert('Errore: '+e.message);console.error(e)}}
