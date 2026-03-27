@@ -160,14 +160,14 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
           <span style="font-size:22px;flex-shrink:0">2️⃣</span>
           <div>
             <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#E8956A;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Vai su fantacalcio</div>
-            <div style="font-size:11px;color:#999;line-height:1.5">Loggati su leghe.fantacalcio.it e vai sulla pagina <strong style="color:#ccc">Formazioni</strong> della tua lega.</div>
+            <div style="font-size:11px;color:#999;line-height:1.5">Loggati su leghe.fantacalcio.it e vai su <strong style="color:#ccc">Formazioni → seleziona l'ultima giornata giocata</strong> (es. <code style="color:#E8956A">/formazioni/28</code>). Aspetta che i risultati siano visibili.</div>
           </div>
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:#1a1a1a;border-radius:8px;border-left:3px solid var(--verde)">
           <span style="font-size:22px;flex-shrink:0">3️⃣</span>
           <div>
             <div style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--verde);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Clicca il preferito</div>
-            <div style="font-size:11px;color:#999;line-height:1.5">Clicca "FantaGazzetta" nella barra dei preferiti. I dati vengono caricati e il giornale si genera automaticamente.</div>
+            <div style="font-size:11px;color:#999;line-height:1.5">Clicca "⚽ FantaGazzetta" nella barra dei preferiti. La pagina si ricarica sulla FantaGazzetta con tutti i dati già pronti.</div>
           </div>
         </div>
       </div>
@@ -236,12 +236,49 @@ var FANTAGAZZETTA_URL=window.location.href.split('?')[0];
 function buildBookmarklet(){
   var url=FANTAGAZZETTA_URL;
   var code='(function(){'+
-    'var sel=document.querySelector("select.selectpicker");'+
-    'if(!sel){alert("Vai sulla pagina Formazioni della tua lega!");return;}'+
-    'var lastG=parseInt(sel.value);'+
-    'if(isNaN(lastG)||lastG<1){alert("Giornata non valida");return;}'+
+    // Verifica che siamo su fantacalcio
+    'if(window.location.hostname.indexOf("fantacalcio")<0){alert("Vai su leghe.fantacalcio.it → Formazioni!");return;}'+
+    // Leggi slug dall'URL
     'var slug=window.location.pathname.split("/")[1];'+
-    'var base=window.location.origin+"/"+slug;'+
+    // Leggi giornata dal path (es /formazioni/28 → 28) oppure dal select
+    'var pathG=parseInt((window.location.pathname.match(/formazioni\\/(\d+)/)||[])[1]);'+
+    'var selG=parseInt((document.querySelector("select.selectpicker")||{}).value);'+
+    // Se siamo su /formazioni senza numero, il select mostra la prossima → prendiamo selG
+    // Se siamo su /formazioni/28, pathG=28
+    'var giornata=pathG||selG;'+
+    'if(!giornata||isNaN(giornata)){alert("Non riesco a leggere la giornata. Vai su /formazioni");return;}'+
+    // Verifica matches calcolati sulla pagina corrente
+    'var calcolati=(window.matches||[]).filter(function(m){return m.calculated;});'+
+    'if(calcolati.length===0){'+
+      // Non ci sono dati calcolati → siamo sulla pagina sbagliata
+      'var giocata=pathG||(selG);'+
+      'alert("Nessun dato disponibile. Vai su:\\nleghe.fantacalcio.it/"+slug+"/formazioni/"+giocata);'+
+      'return;'+
+    '}'+
+    // Estrai formazioni
+    'function exFm(matches){'+
+      'var fm=[];'+
+      '(matches||[]).forEach(function(m){'+
+        'if(!m.teams||m.teams.length<2||!m.calculated)return;'+
+        'm.teams.forEach(function(t){'+
+          'var st=[],bn=[];'+
+          '(t.players||[]).forEach(function(p){'+
+            'var o={r:p.role||"c",nm:p.name||"",v:p.vote||0,fv:p.fantagrade||p.grade||0};'+
+            'if(p.reserve)bn.push(o);else st.push(o);'+
+          '});'+
+          '(t.reserves||[]).forEach(function(p){bn.push({r:p.role||"c",nm:p.name||"",v:p.vote||0,fv:p.fantagrade||p.grade||0});});'+
+          'fm.push({nm:t.name||"",st:st,bn:bn,md:(t.schemes&&t.schemes[0])||"4-3-3",tot:parseFloat(t.score)||0});'+
+        '});'+
+      '});return fm;}'+
+    // Estrai calendario
+    'function exCa(matches,g){'+
+      'var ca=[];'+
+      '(matches||[]).forEach(function(m){'+
+        'if(!m.teams||m.teams.length<2||!m.calculated)return;'+
+        'var hp=parseFloat(m.teams[0].score)||0,ap=parseFloat(m.teams[1].score)||0;'+
+        'ca.push({g:g,ho:m.teams[0].name,hp:hp,ap:ap,aw:m.teams[1].name,rs:hp+"-"+ap,hg:hp,ag:ap});'+
+      '});return ca;}'+
+    // Estrai classifica dalla home via fetch (funziona senza login)
     'function exCl(html){'+
       'var p=new DOMParser(),doc=p.parseFromString(html,"text/html");'+
       'var rows=doc.querySelectorAll("table.smart-table tr"),cl=[];'+
@@ -253,53 +290,22 @@ function buildBookmarklet(){
         'var v=parseInt(cells[4])||0,n=parseInt(cells[5])||0,pr=parseInt(cells[6])||0;'+
         'var gf=parseInt(cells[7])||0,gs=parseInt(cells[8])||0;'+
         'var pts=parseFloat((cells[10]||"0").replace(",","."))||0;'+
-        'var pt=parseInt(cells[9])||0;'+
-        'cl.push({p:cl.length+1,nm:nm,g:g,v:v,n:n,pr:pr,gf:gf,gs2:gs,dr:gf-gs,pts:pts,pt:pt});'+
+        'cl.push({p:cl.length+1,nm:nm,g:g,v:v,n:n,pr:pr,gf:gf,gs2:gs,dr:gf-gs,pts:pts,pt:parseInt(cells[9])||0});'+
       '});return cl;}'+
-    'function exFm(matches){'+
-      'var fm=[];'+
-      '(matches||[]).forEach(function(m){'+
-        'if(!m.teams||m.teams.length<2)return;'+
-        'm.teams.forEach(function(t){'+
-          'var st=[],bn=[];'+
-          '(t.players||[]).forEach(function(p){'+
-            'var o={r:p.role||"c",nm:p.name||"",v:p.vote||0,fv:p.fantagrade||p.grade||0};'+
-            'if(p.reserve)bn.push(o);else st.push(o);'+
-          '});'+
-          '(t.reserves||[]).forEach(function(p){bn.push({r:p.role||"c",nm:p.name||"",v:p.vote||0,fv:p.fantagrade||p.grade||0});});'+
-          'fm.push({nm:t.name||"",st:st,bn:bn,md:(t.schemes&&t.schemes[0])||"4-3-3",tot:parseFloat(t.score)||0});'+
-        '});'+
-      '});return fm;}'+
-    'function exCa(matches,g){'+
-      'var ca=[];'+
-      '(matches||[]).forEach(function(m){'+
-        'if(!m.teams||m.teams.length<2||!m.calculated)return;'+
-        'var hp=parseFloat(m.teams[0].score)||0,ap=parseFloat(m.teams[1].score)||0;'+
-        'ca.push({g:g,ho:m.teams[0].name||"",hp:hp,ap:ap,aw:m.teams[1].name||"",rs:hp+"-"+ap,hg:hp,ag:ap});'+
-      '});return ca;}'+
-    'function send(matches,cl){'+
-      'var fm=exFm(matches),ca=exCa(matches,lastG);'+
-      'var legaNome=document.title||slug;'+
-      'var payload={slug:slug,legaNome:legaNome,giornata:lastG,formazioni:fm,calendario:ca,classifica:cl};'+
-      'var enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));'+
-      'window.open("'+url+'?data="+enc,"_blank");'+
-    '}'+
+    // Fetch classifica e invia tutto
+    'var base=window.location.origin+"/"+slug;'+
     'fetch(base+"/",{credentials:"include"})'+
       '.then(function(r){return r.text();})'+
       '.then(function(html){'+
         'var cl=exCl(html);'+
-        'if(window.matches&&window.matches.length>0&&window.matches[0].calculated){send(window.matches,cl);return;}'+
-        'var w=window.open(base+"/formazioni/"+lastG,"fgpopup","width=100,height=100,left=-2000,top=-2000");'+
-        'var att=0,timer=setInterval(function(){'+
-          'att++;try{'+
-            'if(w.window.matches&&w.window.matches.length>0&&w.window.matches[0].calculated){'+
-              'clearInterval(timer);var md=w.window.matches;w.close();send(md,cl);'+
-            '}'+
-          '}catch(e){}'+
-          'if(att>40){clearInterval(timer);if(w)w.close();alert("Timeout. Riprova dalla pagina formazioni/"+lastG);}'+
-        '},500);'+
+        'var fm=exFm(window.matches);'+
+        'var ca=exCa(window.matches,giornata);'+
+        'var legaNome=(document.querySelector(".dropdown-label")||{}).textContent||slug;'+
+        'var payload={slug:slug,legaNome:legaNome.trim(),giornata:giornata,formazioni:fm,calendario:ca,classifica:cl};'+
+        'var enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));'+
+        'window.location.href="'+url+'?data="+enc;'+  // redirect invece di popup!
       '})'+
-      '.catch(function(e){alert("Errore: "+e.message);});'+
+      '.catch(function(e){alert("Errore fetch classifica: "+e.message);});'+
   '})();';
   return 'javascript:'+encodeURIComponent(code);
 }
