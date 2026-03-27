@@ -141,7 +141,7 @@ body{background:var(--nero);font-family:'Roboto Condensed',sans-serif;min-height
 
 <div id="setup">
   <div class="logo">FantaGazzetta</div>
-  <div class="sub">FantaGazzetta Generator · v8.7</div>
+  <div class="sub">FantaGazzetta Generator · v8.8</div>
 
   <!-- STATO: attesa dati -->
   <div id="stateWaiting">
@@ -244,7 +244,7 @@ function buildBookmarklet(){
     'var calcolati=(window.matches||[]).filter(function(m){return m.calculated;});'+
     // Se non ci sono dati calcolati → redirect sulla giornata giocata con banner
     'if(calcolati.length===0){'+
-      'var giocata=pathG||(isNaN(selG)?0:selG);'+
+      'var giocata=pathG||(isNaN(selG)?0:selG-1);'+
       'if(!giocata){alert("Non riesco a leggere la giornata. Vai su /formazioni");return;}'+
       'var b=document.createElement("div");'+
       'b.style.cssText="position:fixed;top:0;left:0;right:0;background:#E8956A;color:#fff;font-family:sans-serif;font-size:15px;font-weight:bold;text-align:center;padding:14px;z-index:99999;box-shadow:0 3px 10px rgba(0,0,0,.4)";'+
@@ -285,7 +285,7 @@ function dbg(msg){
   b.innerHTML+=msg+'<br>';
 }
 function loadFromURL(){
-  dbg('v8.7 · checking URL...');
+  dbg('v8.8 · checking URL...');
   var params=new URLSearchParams(window.location.search);
   var data=params.get('d');
   if(!data){dbg('Nessun dato in URL');return false;}
